@@ -201,8 +201,14 @@ class HomePage extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: isActive ? AppColors.blue : AppColors.inputBorder, width: isActive ? 1.5 : 1),
-        border-left: isActive ? const Border(left: BorderSide(color: AppColors.blue, width: 4)) : null,
+        border: isActive
+            ? const Border(
+                left: BorderSide(color: AppColors.blue, width: 4),
+                top: BorderSide(color: AppColors.blue, width: 1.5),
+                right: BorderSide(color: AppColors.blue, width: 1.5),
+                bottom: BorderSide(color: AppColors.blue, width: 1.5),
+              )
+            : Border.all(color: AppColors.inputBorder, width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
