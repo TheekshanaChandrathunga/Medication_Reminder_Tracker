@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../constants.dart';
+import '../models/medication_model.dart';
+import '../services/auth_service.dart';
+import '../services/database_service.dart';
 
 class AddMedicationPage extends StatefulWidget {
   const AddMedicationPage({Key? key}) : super(key: key);
@@ -9,8 +13,82 @@ class AddMedicationPage extends StatefulWidget {
 }
 
 class _AddMedicationPageState extends State<AddMedicationPage> {
+  final _nameController = TextEditingController();
+  final _dosageController = TextEditingController();
+  final _startDateController = TextEditingController();
+  final _endDateController = TextEditingController();
+  final _instructionsController = TextEditingController();
+  final _quantityController = TextEditingController();
+  final _refillController = TextEditingController();
+
   String _frequency = 'Daily';
   String _takeWith = 'Before Meal';
+  String _category = 'Pill';
+  List<String> _doseTimes = ['08:00 AM'];
+  bool _isLoading = false;
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _dosageController.dispose();
+    _startDateController.dispose();
+    _endDateController.dispose();
+    _instructionsController.dispose();
+    _quantityController.dispose();
+    _refillController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _saveMedication() async {
+    if (_nameController.text.isEmpty || _dosageController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter name and dosage')),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      final authService = Provider.of<AuthService>(context, listen: false);
+      final dbService = Provider.of<DatabaseService>(context, listen: false);
+      final userId = authService.currentUserId;
+
+      if (userId == null) throw Exception("User not logged in");
+
+      final medication = Medication(
+        userId: userId,
+        name: _nameController.text.trim(),
+        dosage: _dosageController.text.trim(),
+        category: _category,
+        frequency: _frequency,
+        doseTimes: _doseTimes,
+        startDate: _startDateController.text.trim(),
+        endDate: _endDateController.text.trim(),
+        takeWith: _takeWith,
+        instructions: _instructionsController.text.trim(),
+        totalQuantity: int.tryParse(_quantityController.text) ?? 0,
+        refillAlertAt: int.tryParse(_refillController.text) ?? 0,
+      );
+
+      await dbService.addMedication(medication);
+      
+      if (mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Medication added successfully')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -49,10 +127,10 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
                   // Section 1
                   _buildSectionHeader('ℹ️', 'Basic Information'),
                   _buildLabel('Medication Name'),
-                  _buildInput(hint: 'e.g. Amoxicillin'),
+                  _buildInput(controller: _nameController, hint: 'e.g. Amoxicillin'),
                   
                   _buildLabel('Dosage'),
-                  _buildInput(hint: 'e.g. 500mg, 10ml'),
+                  _buildInput(controller: _dosageController, hint: 'e.g. 500mg, 10ml'),
 
                   _buildLabel('Form / Category'),
                   Container(
@@ -63,12 +141,25 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
                       border: Border.all(color: const Color(0xFFCBD5E0)),
                       borderRadius: BorderRadius.circular(6),
                     ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: const [
-                        Text('Select form', style: TextStyle(color: Color(0xFF718096), fontSize: 13)),
-                        Text('▼', style: TextStyle(color: Color(0xFF718096), fontSize: 10)),
-                      ],
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<String>(
+                        value: _category,
+                        isExpanded: true,
+                        isDense: true,
+                        style: const TextStyle(color: AppColors.primaryText, fontSize: 13),
+                        onChanged: (String? newValue) {
+                          setState(() {
+                            _category = newValue!;
+                          });
+                        },
+                        items: <String>['Pill', 'Capsule', 'Liquid', 'Injection', 'Other']
+                            .map<DropdownMenuItem<String>>((String value) {
+                          return DropdownMenuItem<String>(
+                            value: value,
+                            child: Text(value),
+                          );
+                        }).toList(),
+                      ),
                     ),
                   ),
 
@@ -80,35 +171,51 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
                   _buildGrid(['Daily', 'Weekly', 'Monthly', 'As Needed'], _frequency, (val) => setState(() => _frequency = val), false),
 
                   _buildLabel('Dose Times'),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                          decoration: BoxDecoration(
-                            color: AppColors.white,
-                            border: Border.all(color: const Color(0xFFCBD5E0)),
-                            borderRadius: BorderRadius.circular(6),
+                  ..._doseTimes.asMap().entries.map((entry) {
+                    int idx = entry.key;
+                    String time = entry.value;
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                              decoration: BoxDecoration(
+                                color: AppColors.white,
+                                border: Border.all(color: const Color(0xFFCBD5E0)),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(time, style: const TextStyle(fontSize: 13, color: AppColors.primaryText)),
+                            ),
                           ),
-                          child: const Text('08:00 AM', style: TextStyle(fontSize: 13, color: AppColors.primaryText)),
-                        ),
+                          const SizedBox(width: 8),
+                          GestureDetector(
+                            onTap: () {
+                              if (_doseTimes.length > 1) {
+                                setState(() => _doseTimes.removeAt(idx));
+                              }
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFFED7D7),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: const Text('🗑️', style: TextStyle(fontSize: 14)),
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFFED7D7),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: const Text('🗑️', style: TextStyle(fontSize: 14)),
-                      ),
-                    ],
-                  ),
+                    );
+                  }).toList(),
                   
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 8),
                     child: GestureDetector(
-                      onTap: () {},
+                      onTap: () {
+                        setState(() => _doseTimes.add('08:00 PM'));
+                      },
                       child: const Text('+ Add another time', style: TextStyle(fontSize: 12, color: Color(0xFF006A60), fontWeight: FontWeight.w700)),
                     ),
                   ),
@@ -120,7 +227,7 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             _buildLabel('Start Date'),
-                            _buildInput(hint: 'mm/dd/yyyy'),
+                            _buildInput(controller: _startDateController, hint: 'mm/dd/yyyy'),
                           ],
                         ),
                       ),
@@ -130,7 +237,7 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             _buildLabel('End Date (Optional)'),
-                            _buildInput(hint: 'mm/dd/yyyy'),
+                            _buildInput(controller: _endDateController, hint: 'mm/dd/yyyy'),
                           ],
                         ),
                       ),
@@ -154,10 +261,11 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
                       borderRadius: BorderRadius.circular(6),
                     ),
                     height: 70,
-                    child: const TextField(
+                    child: TextField(
+                      controller: _instructionsController,
                       maxLines: 3,
-                      style: TextStyle(fontSize: 13, color: AppColors.primaryText),
-                      decoration: InputDecoration(
+                      style: const TextStyle(fontSize: 13, color: AppColors.primaryText),
+                      decoration: const InputDecoration(
                         hintText: 'e.g. Take with plenty of water',
                         hintStyle: TextStyle(color: Color(0xFFA0AEC0)),
                         border: InputBorder.none,
@@ -174,7 +282,7 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             _buildLabel('Total Quantity'),
-                            _buildInput(hint: 'e.g. 30', keyboardType: TextInputType.number),
+                            _buildInput(controller: _quantityController, hint: 'e.g. 30', keyboardType: TextInputType.number),
                           ],
                         ),
                       ),
@@ -184,7 +292,7 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             _buildLabel('Remind to refill at'),
-                            _buildInput(hint: 'e.g. 5', keyboardType: TextInputType.number),
+                            _buildInput(controller: _refillController, hint: 'e.g. 5', keyboardType: TextInputType.number),
                           ],
                         ),
                       ),
@@ -195,9 +303,7 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
                   Container(
                     margin: const EdgeInsets.only(top: 24, bottom: 30),
                     child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
+                      onPressed: _isLoading ? null : _saveMedication,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.blue,
                         foregroundColor: AppColors.white,
@@ -205,7 +311,9 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
                         elevation: 0,
                       ),
-                      child: const Text('Save Medication', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
+                      child: _isLoading 
+                        ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                        : const Text('Save Medication', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
                     ),
                   ),
                 ],
@@ -237,7 +345,7 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
     );
   }
 
-  Widget _buildInput({required String hint, TextInputType? keyboardType}) {
+  Widget _buildInput({required TextEditingController controller, required String hint, TextInputType? keyboardType}) {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -247,6 +355,7 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
         borderRadius: BorderRadius.circular(6),
       ),
       child: TextField(
+        controller: controller,
         keyboardType: keyboardType,
         style: const TextStyle(fontSize: 13, color: AppColors.primaryText),
         decoration: InputDecoration(
