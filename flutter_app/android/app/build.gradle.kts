@@ -9,7 +9,8 @@ plugins {
 android {
     namespace = "com.example.meditrack"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    // Fix: Explicitly set the NDK version required by Firebase plugins
+    ndkVersion = "27.0.12077973"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
@@ -22,7 +23,8 @@ android {
 
     defaultConfig {
         applicationId = "com.example.meditrack"
-        minSdk = 21 // Firebase requires at least 21
+        // Fix: Increased minSdk to 23 to support latest Firebase Auth library requirements
+        minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
@@ -44,7 +46,6 @@ dependencies {
     implementation(platform("com.google.firebase:firebase-bom:33.9.0"))
 
     // Add the dependencies for the Firebase products you want to use
-    // When using the BoM, don't specify versions in Firebase dependencies
     implementation("com.google.firebase:firebase-analytics")
     implementation("com.google.firebase:firebase-auth")
     implementation("com.google.firebase:firebase-firestore")
