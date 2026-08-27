@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../constants.dart';
+import '../services/auth_service.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({Key? key}) : super(key: key);
@@ -12,11 +14,51 @@ class _RegisterPageState extends State<RegisterPage> {
   String _userType = 'Patient';
   bool _showPassword = false;
   bool _showConfirmPassword = false;
+  bool _isLoading = false;
 
   final TextEditingController _nameCtrl = TextEditingController();
   final TextEditingController _emailCtrl = TextEditingController();
   final TextEditingController _passCtrl = TextEditingController();
   final TextEditingController _confirmPassCtrl = TextEditingController();
+
+  Future<void> _register() async {
+    if (_nameCtrl.text.isEmpty || _emailCtrl.text.isEmpty || _passCtrl.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please fill all fields')),
+      );
+      return;
+    }
+
+    if (_passCtrl.text != _confirmPassCtrl.text) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Passwords do not match')),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+    
+    try {
+      final authService = Provider.of<AuthService>(context, listen: false);
+      await authService.registerWithEmail(
+        _emailCtrl.text.trim(),
+        _passCtrl.text.trim(),
+        _nameCtrl.text.trim(),
+        _userType,
+      );
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, '/home');
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString())),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -46,7 +88,7 @@ class _RegisterPageState extends State<RegisterPage> {
                           ),
                           alignment: Alignment.center,
                           margin: const EdgeInsets.only(bottom: 16),
-                          child: const Text('💼', style: TextStyle(fontSize: 30, color: AppColors.blue)),
+                          child: const Text('💼', style: TextStyle(fontSize: 30, color: AppColors.white)),
                         ),
                         const Text(
                           'MediTrack',
@@ -175,9 +217,7 @@ class _RegisterPageState extends State<RegisterPage> {
                         Container(
                           margin: const EdgeInsets.only(top: 20),
                           child: ElevatedButton(
-                            onPressed: () {
-                              Navigator.pushReplacementNamed(context, '/login');
-                            },
+                            onPressed: _isLoading ? null : _register,
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppColors.blue,
                               foregroundColor: AppColors.white,
@@ -187,7 +227,9 @@ class _RegisterPageState extends State<RegisterPage> {
                               ),
                               elevation: 0,
                             ),
-                            child: const Text('Create Account →', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
+                            child: _isLoading 
+                              ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                              : const Text('Create Account →', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
                           ),
                         ),
 

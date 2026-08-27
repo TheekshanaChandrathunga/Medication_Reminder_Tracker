@@ -1,41 +1,30 @@
-# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
+# Flutter / Dart
+**/build/
+**/.dart_tool/
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+**/.pub-cache/
+**/.pub/
+**/doc/api/
 
-# dependencies
-node_modules/
+# Firebase Sensitive Files (CRITICAL)
+**/google-services.json
+**/GoogleService-Info.plist
+**/firebase_options.dart
+**/.env
 
-# Expo
-.expo/
-dist/
-web-build/
-expo-env.d.ts
+# Android Sensitive Files
+**/android/**/generated/
+**/android/key.properties
+**/*.keystore
+**/*.jks
 
-# Native
-.kotlin/
-*.orig.*
-*.jks
-*.p8
-*.p12
-*.key
-*.mobileprovision
+# IDEs
+.idea/
+.vscode/
+*.iml
 
-# Metro
-.metro-health-check*
-
-# debug
-npm-debug.*
-yarn-debug.*
-yarn-error.*
-
-# macOS
+# Miscellaneous
 .DS_Store
-*.pem
-
-# local env files
-.env*.local
-
-# typescript
-*.tsbuildinfo
-
-# generated native folders
-/ios
-/android
+*.log
+node_modules/

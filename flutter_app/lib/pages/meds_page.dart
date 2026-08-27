@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../constants.dart';
 import '../widgets/bottom_nav.dart';
+import '../models/medication_model.dart';
+import '../services/auth_service.dart';
+import '../services/database_service.dart';
 
 class MedsPage extends StatefulWidget {
   const MedsPage({Key? key}) : super(key: key);
@@ -11,17 +15,14 @@ class MedsPage extends StatefulWidget {
 
 class _MedsPageState extends State<MedsPage> {
   final TextEditingController _searchCtrl = TextEditingController();
-  
-  // mock data
-  final List<Map<String, dynamic>> _meds = [
-    { 'icon': '💊', 'name': 'Atorvastatin', 'dosage': '20 mg', 'tag': '⏰ Once daily at night', 'active': true, 'bg': AppColors.iconBg },
-    { 'icon': '📋', 'name': 'Metformin', 'dosage': '500 mg', 'tag': '⏰ Twice daily w/ meals', 'active': true, 'bg': AppColors.iconBg },
-    { 'icon': '💉', 'name': 'Amoxicillin', 'dosage': '250 mg', 'tag': '📅 Completed Oct 12', 'active': false, 'bg': const Color(0xFFF0F0F0) },
-    { 'icon': '🫙', 'name': 'Losartan', 'dosage': '50 mg', 'tag': '⏰ Once daily morning', 'active': true, 'bg': AppColors.iconBg },
-  ];
+  String _searchQuery = '';
 
   @override
   Widget build(BuildContext context) {
+    final authService = Provider.of<AuthService>(context);
+    final dbService = Provider.of<DatabaseService>(context);
+    final userId = authService.currentUserId;
+
     return Scaffold(
       backgroundColor: AppColors.pageBg,
       body: SafeArea(
@@ -39,7 +40,7 @@ class _MedsPageState extends State<MedsPage> {
                         width: 32,
                         height: 32,
                         decoration: const BoxDecoration(
-                          color: AppColors.dark,
+                          color: Color(0xFFE2E8F0),
                           shape: BoxShape.circle,
                         ),
                         alignment: Alignment.center,
@@ -56,62 +57,77 @@ class _MedsPageState extends State<MedsPage> {
                 
                 // Content
                 Expanded(
-                  child: ListView(
-                    padding: const EdgeInsets.only(left: 16, right: 16, top: 10, bottom: 100),
-                    children: [
-                      const Padding(
-                        padding: EdgeInsets.only(bottom: 16),
-                        child: Text('Medications', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: AppColors.primaryText)),
-                      ),
-                      
-                      // Search Row
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 20),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Container(
-                                height: 42,
-                                padding: const EdgeInsets.symmetric(horizontal: 14),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFEBF3FF),
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: Row(
-                                  children: [
-                                    const Text('🔍', style: TextStyle(fontSize: 14, color: Color(0xFFA0AEC0))),
-                                    const SizedBox(width: 8),
-                                    Expanded(
-                                      child: TextField(
-                                        controller: _searchCtrl,
-                                        style: const TextStyle(fontSize: 14, color: AppColors.primaryText),
-                                        decoration: const InputDecoration(
-                                          hintText: 'Search medications...',
-                                          hintStyle: TextStyle(color: Color(0xFFA0AEC0)),
-                                          border: InputBorder.none,
-                                          isDense: true,
-                                          contentPadding: EdgeInsets.zero,
-                                        ),
-                                      ),
+                  child: userId == null
+                  ? const Center(child: Text("Please login to see your medications"))
+                  : StreamBuilder<List<Medication>>(
+                    stream: dbService.getMedications(userId),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+
+                      final medications = (snapshot.data ?? []).where((med) {
+                        return med.name.toLowerCase().contains(_searchQuery.toLowerCase());
+                      }).toList();
+
+                      return ListView(
+                        padding: const EdgeInsets.only(left: 16, right: 16, top: 10, bottom: 100),
+                        children: [
+                          const Padding(
+                            padding: EdgeInsets.only(bottom: 16),
+                            child: Text('Medications', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: AppColors.primaryText)),
+                          ),
+                          
+                          // Search Row
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 20),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Container(
+                                    height: 42,
+                                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFEBF3FF),
+                                      borderRadius: BorderRadius.circular(20),
                                     ),
-                                  ],
+                                    child: Row(
+                                      children: [
+                                        const Icon(Icons.search, size: 18, color: Color(0xFFA0AEC0)),
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: TextField(
+                                            controller: _searchCtrl,
+                                            onChanged: (value) {
+                                              setState(() {
+                                                _searchQuery = value;
+                                              });
+                                            },
+                                            style: const TextStyle(fontSize: 14, color: AppColors.primaryText),
+                                            decoration: const InputDecoration(
+                                              hintText: 'Search medications...',
+                                              hintStyle: TextStyle(color: Color(0xFFA0AEC0)),
+                                              border: InputBorder.none,
+                                              isDense: true,
+                                              contentPadding: EdgeInsets.zero,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
                                 ),
-                              ),
+                              ],
                             ),
-                            const SizedBox(width: 10),
-                            Container(
-                              width: 42, height: 42,
-                              decoration: const BoxDecoration(color: Color(0xFFEBF3FF), shape: BoxShape.circle),
-                              alignment: Alignment.center,
-                              child: const Text('⚙️', style: TextStyle(fontSize: 16)),
-                            ),
-                          ],
-                        ),
-                      ),
-                      
-                      // Cards
-                      ..._meds.map((m) => _buildCard(m)).toList(),
-                    ],
+                          ),
+                          
+                          if (medications.isEmpty)
+                            const Center(child: Text("No medications found."))
+                          else
+                            ...medications.map((m) => _buildCard(m)).toList(),
+                        ],
+                      );
+                    },
                   ),
                 ),
               ],
@@ -135,10 +151,7 @@ class _MedsPageState extends State<MedsPage> {
                     ],
                   ),
                   alignment: Alignment.center,
-                  child: const Padding(
-                    padding: EdgeInsets.only(bottom: 4),
-                    child: Text('+', style: TextStyle(fontSize: 28, color: Colors.white, fontWeight: FontWeight.w300)),
-                  ),
+                  child: const Icon(Icons.add, color: Colors.white, size: 30),
                 ),
               ),
             ),
@@ -154,8 +167,17 @@ class _MedsPageState extends State<MedsPage> {
     );
   }
 
-  Widget _buildCard(Map<String, dynamic> data) {
-    bool active = data['active'];
+  String _getIconForCategory(String category) {
+    switch (category) {
+      case 'Pill': return '💊';
+      case 'Capsule': return '💊';
+      case 'Liquid': return '🧪';
+      case 'Injection': return '💉';
+      default: return '💊';
+    }
+  }
+
+  Widget _buildCard(Medication med) {
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
       padding: const EdgeInsets.all(16),
@@ -169,10 +191,10 @@ class _MedsPageState extends State<MedsPage> {
         children: [
           Container(
             width: 52, height: 52,
-            decoration: BoxDecoration(color: data['bg'], borderRadius: BorderRadius.circular(12)),
+            decoration: BoxDecoration(color: AppColors.iconBg, borderRadius: BorderRadius.circular(12)),
             alignment: Alignment.center,
             margin: const EdgeInsets.only(right: 14),
-            child: Text(data['icon'], style: const TextStyle(fontSize: 20)),
+            child: Text(_getIconForCategory(med.category), style: const TextStyle(fontSize: 20)),
           ),
           Expanded(
             child: Column(
@@ -181,18 +203,18 @@ class _MedsPageState extends State<MedsPage> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(data['name'], style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.primaryText)),
+                    Text(med.name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.primaryText)),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
-                        color: active ? const Color(0xFFE6FFFA) : const Color(0xFFEDF2F7),
+                        color: const Color(0xFFE6FFFA),
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: Text(
-                        active ? 'Active' : 'Inactive',
+                      child: const Text(
+                        'Active',
                         style: TextStyle(
                           fontSize: 11, fontWeight: FontWeight.w700,
-                          color: active ? const Color(0xFF38A169) : const Color(0xFFA0AEC0),
+                          color: Color(0xFF38A169),
                         ),
                       ),
                     ),
@@ -200,21 +222,19 @@ class _MedsPageState extends State<MedsPage> {
                 ),
                 Padding(
                   padding: const EdgeInsets.only(top: 2, bottom: 8),
-                  child: Text(data['dosage'], style: const TextStyle(fontSize: 13, color: AppColors.subText)),
+                  child: Text(med.dosage, style: const TextStyle(fontSize: 13, color: AppColors.subText)),
                 ),
                 Container(
-                  padding: active 
-                    ? const EdgeInsets.symmetric(horizontal: 10, vertical: 5)
-                    : EdgeInsets.zero,
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                   decoration: BoxDecoration(
-                    color: active ? const Color(0xFFF0F4FC) : Colors.transparent,
+                    color: const Color(0xFFF0F4FC),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
-                    data['tag'],
-                    style: TextStyle(
+                    '${med.frequency} • ${med.doseTimes.join(", ")}',
+                    style: const TextStyle(
                       fontSize: 12, fontWeight: FontWeight.w500,
-                      color: active ? const Color(0xFF4A5568) : const Color(0xFFA0AEC0),
+                      color: Color(0xFF4A5568),
                     ),
                   ),
                 ),

@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../services/auth_service.dart';
 
 class SplashPage extends StatefulWidget {
   const SplashPage({Key? key}) : super(key: key);
@@ -14,9 +16,18 @@ class _SplashPageState extends State<SplashPage> {
   @override
   void initState() {
     super.initState();
-    _timer = Timer(const Duration(milliseconds: 1500), () {
-      Navigator.pushReplacementNamed(context, '/login');
+    _timer = Timer(const Duration(milliseconds: 2000), () {
+      _checkAuth();
     });
+  }
+
+  void _checkAuth() {
+    final authService = Provider.of<AuthService>(context, listen: false);
+    if (authService.currentUserId != null) {
+      Navigator.pushReplacementNamed(context, '/home');
+    } else {
+      Navigator.pushReplacementNamed(context, '/login');
+    }
   }
 
   @override
