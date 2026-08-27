@@ -98,6 +98,61 @@ flowchart TD
     class A,I startEnd;
     class B,C,D,F,G,H,J,K,L,N,O,P,Q process;
     class E decision;
-    class M external; ```
+    class M external;
+```
+
+### Medication Management
+```mermaid
+flowchart TD
+
+    A([Start]) --> B[Login]
+
+    B --> C[Open Medication Management]
+
+    C --> D[Select Add Medication]
+
+    D --> E[Enter Medication Details]
+
+    E --> F{Upload Medication Photo?}
+
+    F -- Yes --> G[Upload Medication Photo]
+    F -- No --> H[Save Medication]
+
+    G --> H
+
+    H --> I[Medication Added Successfully]
+
+    I --> J[View Medications]
+
+    J --> K[Search / Filter Medications]
+
+    K --> L[Select Medication]
+
+    L --> M{Choose Action}
+
+    M -- Edit --> N[Edit Medication Details]
+    N --> O[Save Updated Medication]
+    O --> J
+
+    M -- Delete --> P[Delete Medication]
+    P --> Q{Confirm Deletion?}
+
+    Q -- No --> J
+    Q -- Yes --> R[Medication Deleted Successfully]
+    R --> J
+
+    M -- Finish --> S([End])
+
+
+    %% Styling
+
+    classDef startEnd fill:#ffffff,stroke:#222222,stroke-width:2px;
+    classDef process fill:#eef5ff,stroke:#2563eb,stroke-width:1.5px;
+    classDef decision fill:#fff7ed,stroke:#ea580c,stroke-width:1.5px;
+
+    class A,S startEnd;
+    class B,C,D,E,G,H,I,J,K,L,N,O,P,R process;
+    class F,M,Q decision;
+```
 
 
