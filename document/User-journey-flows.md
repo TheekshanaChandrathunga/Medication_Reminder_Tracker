@@ -155,4 +155,76 @@ flowchart TD
     class F,M,Q decision;
 ```
 
+### Medication Schedule & Reminder
+```mermaid
+flowchart TD
+
+    A([Start]) --> B[Login]
+
+    B --> C[View Today's Schedule]
+
+    C --> D[System Checks Medication Schedule]
+
+    D --> E{Is it Medication Time?}
+
+    E -- No --> D
+
+    E -- Yes --> F[Send Push Notification]
+
+    F --> G[Receive Medication Reminder]
+
+    G --> H{What does the Patient do?}
+
+    H -- Take Medication --> I[Take Medication]
+    I --> J[Mark Dose as Taken]
+    J --> K[Update Medication History]
+    K --> L([End])
+
+    H -- Snooze --> M[Select Snooze Duration]
+    M --> N{Select 5 / 10 / 15 Minutes}
+    N --> O[Wait for Snooze Duration]
+    O --> F
+
+    H -- Do Not Respond --> P[Wait 30 Minutes]
+    P --> Q[Send Missed Dose Alert]
+    Q --> R[Receive Missed Dose Alert]
+    R --> S[Mark Dose as Missed]
+    S --> K
+
+
+    %% Refill Reminder Flow
+
+    D --> T{Is Medication Stock Low?}
+
+    T -- Yes --> U[Send Refill Reminder]
+    U --> V[Receive Refill Reminder]
+    V --> D
+
+    T -- No --> D
+
+
+    %% Daily Summary Flow
+
+    D --> W{Daily Summary Time?}
+
+    W -- Yes --> X[Send Daily Summary]
+    X --> Y[Receive Daily Medication Summary]
+    Y --> D
+
+    W -- No --> D
+
+
+    %% Styling
+
+    classDef startEnd fill:#ffffff,stroke:#222222,stroke-width:2px;
+    classDef process fill:#eef5ff,stroke:#2563eb,stroke-width:1.5px;
+    classDef decision fill:#fff7ed,stroke:#ea580c,stroke-width:1.5px;
+    classDef notification fill:#f5f5f5,stroke:#555555,stroke-width:1.5px;
+
+    class A,L startEnd;
+    class B,C,D,F,G,I,J,K,M,O,Q,R,S,U,V,X,Y process;
+    class E,H,N,P,T,W decision;
+```
+
+
 
