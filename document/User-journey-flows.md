@@ -226,5 +226,46 @@ flowchart TD
     class E,H,N,P,T,W decision;
 ```
 
+### Dose Tracking & Adherence
+```mermaid
+flowchart TD
+
+    A([Start]) --> B[Open Today's Schedule]
+
+    B --> C[Select Scheduled Medication Dose]
+
+    C --> D{Did the Patient Take the Dose?}
+
+    D -- Yes --> E[Mark Dose as Taken]
+
+    D -- No --> F[Mark Dose as Missed]
+
+    E --> G{Add a Dose Note?}
+    F --> G
+
+    G -- Yes --> H[Enter Short Dose Note]
+    G -- No --> I[Update Medication History]
+
+    H --> I
+
+    I --> J[View Medication History]
+
+    J --> K[Calculate Adherence Statistics]
+
+    K --> L[View Weekly / Monthly Adherence]
+
+    L --> M([End])
+
+
+    %% Styling
+
+    classDef startEnd fill:#ffffff,stroke:#222222,stroke-width:2px;
+    classDef process fill:#eef5ff,stroke:#2563eb,stroke-width:1.5px;
+    classDef decision fill:#fff7ed,stroke:#ea580c,stroke-width:1.5px;
+
+    class A,M startEnd;
+    class B,C,E,F,H,I,J,K,L process;
+    class D,G decision;
+```
 
 
