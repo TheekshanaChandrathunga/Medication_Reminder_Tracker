@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import '../constants.dart';
 import '../widgets/bottom_nav.dart';
 import '../services/auth_service.dart';
@@ -85,13 +84,13 @@ class ProfilePage extends StatelessWidget {
                 Expanded(
                   child: userId == null
                       ? const Center(child: Text("Please login to see profile"))
-                      : StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-                          stream: dbService.getUserProfile(userId),
+                      : StreamBuilder<Map<String, dynamic>?>(
+                          stream: dbService.getUserProfile(userId!),
                           builder: (context, snapshot) {
                             if (snapshot.hasError) return Center(child: Text("Error: ${snapshot.error}"));
                             if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
                             
-                            final data = snapshot.data?.data() ?? {};
+                            final data = snapshot.data ?? {};
                             final name = data['name'] ?? 'User';
                             final email = data['email'] ?? '';
                             final role = data['role'] ?? 'Patient';
@@ -130,7 +129,7 @@ class ProfilePage extends StatelessWidget {
                                 _buildMenuTile(
                                   icon: Icons.person_outline,
                                   title: 'Edit Profile Information',
-                                  onTap: () => _showEditProfile(context, userId, name, role),
+                                  onTap: () => _showEditProfile(context, userId!, name, role),
                                 ),
                                 _buildMenuTile(
                                   icon: Icons.history,

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:cloud_firestore/cloud_firestore.dart'; // Added missing import
 import '../constants.dart';
 import '../widgets/bottom_nav.dart';
 import '../models/medication_model.dart';
@@ -70,6 +69,7 @@ class _MedsPageState extends State<MedsPage> {
           children: [
             Column(
               children: [
+                // Header
                 Container(
                   padding: const EdgeInsets.only(left: 20, right: 20, top: 16, bottom: 10),
                   color: AppColors.white,
@@ -96,7 +96,7 @@ class _MedsPageState extends State<MedsPage> {
                       return ListView(
                         padding: const EdgeInsets.all(16),
                         children: [
-                          const Text('Medication List', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800)),
+                          const Text('My Medications', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800)),
                           const SizedBox(height: 16),
                           
                           Container(
