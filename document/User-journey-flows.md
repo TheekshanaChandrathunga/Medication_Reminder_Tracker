@@ -268,4 +268,68 @@ flowchart TD
     class D,G decision;
 ```
 
+### Report Generation & Data Export
+```mermaid
+flowchart TD
+
+    A([Start]) --> B[Login]
+
+    B --> C[Open Reporting & Data Export]
+
+    C --> D{Select an Action}
+
+    %% PDF REPORT FLOW
+    D -- Generate PDF Report --> E[Generate PDF Report]
+
+    E --> F[PDF Report Created]
+
+    F --> G([End])
+
+
+    %% EMAIL REPORT FLOW
+    D -- Email Report --> H[Generate PDF Report]
+
+    H --> I[Enter Recipient Email]
+
+    I --> J[Send Email Report]
+
+    J --> K[Email Service Sends Report]
+
+    K --> L[Report Successfully Emailed]
+
+    L --> G
+
+
+    %% ADHERENCE CHART FLOW
+    D -- View Adherence Chart --> M[Retrieve Adherence Data]
+
+    M --> N[Generate Weekly / Monthly Adherence Chart]
+
+    N --> O[Display Adherence Chart]
+
+    O --> G
+
+
+    %% CSV EXPORT FLOW
+    D -- Export Medication Data --> P[Prepare Medication Data]
+
+    P --> Q[Generate CSV File]
+
+    Q --> R[Export Medication Data]
+
+    R --> G
+
+
+    %% Styling
+
+    classDef startEnd fill:#ffffff,stroke:#222222,stroke-width:2px;
+    classDef process fill:#eef5ff,stroke:#2563eb,stroke-width:1.5px;
+    classDef decision fill:#fff7ed,stroke:#ea580c,stroke-width:1.5px;
+    classDef external fill:#f5f5f5,stroke:#555555,stroke-width:1.5px;
+
+    class A,G startEnd;
+    class B,C,E,F,H,I,J,L,M,N,O,P,Q,R process;
+    class D decision;
+    class K external;
+```
 
