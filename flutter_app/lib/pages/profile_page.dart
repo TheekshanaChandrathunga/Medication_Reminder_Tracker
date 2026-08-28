@@ -4,13 +4,56 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../constants.dart';
 import '../widgets/bottom_nav.dart';
 import '../services/auth_service.dart';
+import '../services/database_service.dart';
 
 class ProfilePage extends StatelessWidget {
-  const ProfilePage({Key? key}) : super(key: key);
+  const ProfilePage({super.key});
+
+  void _showEditProfile(BuildContext context, String userId, String currentName, String currentRole) {
+    final nameController = TextEditingController(text: currentName);
+    String selectedRole = currentRole;
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('Edit Profile'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameController,
+                decoration: const InputDecoration(labelText: 'Full Name', border: OutlineInputBorder()),
+              ),
+              const SizedBox(height: 16),
+              DropdownButtonFormField<String>(
+                value: selectedRole,
+                decoration: const InputDecoration(labelText: 'Role', border: OutlineInputBorder()),
+                onChanged: (val) => setDialogState(() => selectedRole = val!),
+                items: ['Patient', 'Caregiver'].map((r) => DropdownMenuItem(value: r, child: Text(r))).toList(),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+            ElevatedButton(
+              onPressed: () async {
+                final db = Provider.of<DatabaseService>(context, listen: false);
+                await db.updateProfile(userId, nameController.text.trim(), selectedRole);
+                if (context.mounted) Navigator.pop(context);
+              },
+              child: const Text('Save Changes'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final authService = Provider.of<AuthService>(context);
+    final dbService = Provider.of<DatabaseService>(context);
     final userId = authService.currentUserId;
 
     return Scaffold(
@@ -20,205 +63,119 @@ class ProfilePage extends StatelessWidget {
           children: [
             Column(
               children: [
-                // Top App Header
+                // Header
                 Container(
                   padding: const EdgeInsets.only(left: 20, right: 20, top: 16, bottom: 10),
                   color: AppColors.white,
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Row(
-                        children: [
-                          Container(
-                            width: 32,
-                            height: 32,
-                            decoration: const BoxDecoration(
-                              color: Color(0xFFE2E8F0),
-                              shape: BoxShape.circle,
-                            ),
-                            alignment: Alignment.center,
-                            margin: const EdgeInsets.only(right: 8),
-                            child: const Text('💊', style: TextStyle(fontSize: 16)),
-                          ),
-                          const Text(
-                            'MediTrack',
-                            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.blue),
-                          ),
-                        ],
+                      const Text('My Profile', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.blue)),
+                      IconButton(
+                        icon: const Icon(Icons.logout, color: Colors.redAccent),
+                        onPressed: () async {
+                          await authService.signOut();
+                          if (context.mounted) Navigator.pushReplacementNamed(context, '/login');
+                        },
                       ),
-                      const Icon(Icons.settings, color: AppColors.blue),
                     ],
                   ),
                 ),
 
-                // Content
                 Expanded(
                   child: userId == null
                       ? const Center(child: Text("Please login to see profile"))
-                      : StreamBuilder<DocumentSnapshot>(
-                          stream: FirebaseFirestore.instance.collection('users').doc(userId).snapshots(),
+                      : StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+                          stream: dbService.getUserProfile(userId),
                           builder: (context, snapshot) {
-                            if (snapshot.connectionState == ConnectionState.waiting) {
-                              return const Center(child: CircularProgressIndicator());
-                            }
+                            if (snapshot.hasError) return Center(child: Text("Error: ${snapshot.error}"));
+                            if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
                             
-                            final userData = snapshot.data?.data() as Map<String, dynamic>? ?? {};
-                            final name = userData['name'] ?? 'User';
-                            final email = userData['email'] ?? 'No email';
-                            final role = userData['role'] ?? 'Patient';
+                            final data = snapshot.data?.data() ?? {};
+                            final name = data['name'] ?? 'User';
+                            final email = data['email'] ?? '';
+                            final role = data['role'] ?? 'Patient';
 
                             return ListView(
-                              padding: const EdgeInsets.only(left: 16, right: 16, bottom: 100),
+                              padding: const EdgeInsets.all(16),
                               children: [
-                                // Profile Header
-                                Container(
-                                  margin: const EdgeInsets.symmetric(vertical: 20),
+                                // Avatar Section
+                                Center(
                                   child: Column(
                                     children: [
-                                      Stack(
-                                        alignment: Alignment.bottomCenter,
-                                        children: [
-                                          Container(
-                                            width: 100,
-                                            height: 100,
-                                            margin: const EdgeInsets.only(bottom: 12),
-                                            decoration: BoxDecoration(
-                                              color: AppColors.blue.withOpacity(0.1),
-                                              shape: BoxShape.circle,
-                                            ),
-                                            alignment: Alignment.center,
-                                            child: Text(
-                                              name.isNotEmpty ? name[0].toUpperCase() : 'U',
-                                              style: const TextStyle(fontSize: 40, fontWeight: FontWeight.bold, color: AppColors.blue),
-                                            ),
-                                          ),
-                                          Positioned(
-                                            bottom: 12,
-                                            child: Container(
-                                              width: 100,
-                                              padding: const EdgeInsets.symmetric(vertical: 3),
-                                              decoration: const BoxDecoration(
-                                                color: Color.fromRGBO(2, 103, 154, 0.85),
-                                                borderRadius: BorderRadius.only(
-                                                  bottomLeft: Radius.circular(50),
-                                                  bottomRight: Radius.circular(50),
-                                                ),
-                                              ),
-                                              alignment: Alignment.center,
-                                              child: const Text('Edit', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600)),
-                                            ),
-                                          ),
-                                        ],
+                                      const SizedBox(height: 20),
+                                      CircleAvatar(
+                                        radius: 50,
+                                        backgroundColor: AppColors.blue.withValues(alpha: 0.1),
+                                        child: Text(name.isNotEmpty ? name[0].toUpperCase() : 'U', 
+                                          style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: AppColors.blue)),
                                       ),
-                                      Text(name, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.primaryText)),
-                                      const SizedBox(height: 4),
-                                      Text(email, style: const TextStyle(fontSize: 13, color: AppColors.subText)),
-                                      const SizedBox(height: 4),
-                                      Text('Role: $role', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.blue)),
-                                    ],
-                                  ),
-                                ),
-
-                                // Section 1: Account
-                                const Padding(
-                                  padding: EdgeInsets.only(bottom: 10),
-                                  child: Text('Account', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.primaryText)),
-                                ),
-                                Container(
-                                  decoration: BoxDecoration(
-                                    color: AppColors.white,
-                                    borderRadius: BorderRadius.circular(16),
-                                    border: Border.all(color: AppColors.inputBorder),
-                                  ),
-                                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                                  child: Column(
-                                    children: [
-                                      _buildMenuItem('✏️', 'Edit Profile'),
-                                      const Divider(height: 1, color: Color(0xFFEDF2F7)),
-                                      _buildMenuItem('👤', 'Account Information'),
-                                      const Divider(height: 1, color: Color(0xFFEDF2F7)),
-                                      _buildMenuItem('👥', 'Caregiver Access'),
-                                    ],
-                                  ),
-                                ),
-
-                                // Section 2: Support
-                                const Padding(
-                                  padding: EdgeInsets.only(top: 24, bottom: 10),
-                                  child: Text('Support', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.primaryText)),
-                                ),
-                                Container(
-                                  decoration: BoxDecoration(
-                                    color: AppColors.white,
-                                    borderRadius: BorderRadius.circular(16),
-                                    border: Border.all(color: AppColors.inputBorder),
-                                  ),
-                                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                                  child: Column(
-                                    children: [
-                                      _buildMenuItem('❓', 'Help Center'),
-                                      const Divider(height: 1, color: Color(0xFFEDF2F7)),
-                                      _buildMenuItem(
-                                        '🚪', 
-                                        'Logout', 
-                                        textColor: const Color(0xFFE53E3E),
-                                        onTap: () async {
-                                          await authService.signOut();
-                                          Navigator.pushReplacementNamed(context, '/login');
-                                        }
+                                      const SizedBox(height: 16),
+                                      Text(name, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+                                      Text(email, style: const TextStyle(color: AppColors.subText)),
+                                      const SizedBox(height: 8),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                                        decoration: BoxDecoration(color: AppColors.iconBg, borderRadius: BorderRadius.circular(20)),
+                                        child: Text(role, style: const TextStyle(color: AppColors.blue, fontWeight: FontWeight.bold, fontSize: 12)),
                                       ),
                                     ],
                                   ),
                                 ),
+                                const SizedBox(height: 40),
+                                
+                                const Text('Settings', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.secondaryText)),
+                                const SizedBox(height: 12),
+                                
+                                _buildMenuTile(
+                                  icon: Icons.person_outline,
+                                  title: 'Edit Profile Information',
+                                  onTap: () => _showEditProfile(context, userId, name, role),
+                                ),
+                                _buildMenuTile(
+                                  icon: Icons.history,
+                                  title: 'Adherence History Log',
+                                  onTap: () => Navigator.pushNamed(context, '/history'),
+                                ),
+                                _buildMenuTile(
+                                  icon: Icons.bar_chart,
+                                  title: 'View Health Reports',
+                                  onTap: () => Navigator.pushNamed(context, '/reports'),
+                                ),
+                                _buildMenuTile(
+                                  icon: Icons.help_outline,
+                                  title: 'Help & Support Center',
+                                  onTap: () {},
+                                ),
+                                
+                                const SizedBox(height: 100),
                               ],
                             );
-                          }
+                          },
                         ),
                 ),
               ],
             ),
-
-            // Bottom Nav
-            const Positioned(
-              bottom: 0, left: 0, right: 0,
-              child: BottomNav(activeTab: 'Profile'),
-            ),
+            const Positioned(bottom: 0, left: 0, right: 0, child: BottomNav(activeTab: 'Profile')),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildMenuItem(String icon, String label, {Color? textColor, VoidCallback? onTap}) {
-    return GestureDetector(
-      onTap: onTap ?? () {},
-      behavior: HitTestBehavior.opaque,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 14),
-        child: Row(
-          children: [
-            Text(icon, style: const TextStyle(fontSize: 16)),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                label,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: textColor ?? const Color(0xFF2D3748),
-                ),
-              ),
-            ),
-            Text(
-              '›',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: textColor ?? const Color(0xFFCBD5E0),
-              ),
-            ),
-          ],
-        ),
+  Widget _buildMenuTile({required IconData icon, required String title, required VoidCallback onTap}) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.inputBorder),
+      ),
+      child: ListTile(
+        leading: Icon(icon, color: AppColors.blue),
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+        trailing: const Icon(Icons.chevron_right, color: Colors.grey, size: 20),
+        onTap: onTap,
       ),
     );
   }

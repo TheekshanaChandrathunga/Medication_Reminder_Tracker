@@ -6,7 +6,8 @@ import '../services/auth_service.dart';
 import '../services/database_service.dart';
 
 class AddMedicationPage extends StatefulWidget {
-  const AddMedicationPage({Key? key}) : super(key: key);
+  final Medication? medication; // Null means "Add", not null means "Edit"
+  const AddMedicationPage({super.key, this.medication});
 
   @override
   State<AddMedicationPage> createState() => _AddMedicationPageState();
@@ -26,6 +27,26 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
   String _category = 'Pill';
   List<String> _doseTimes = ['08:00 AM'];
   bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // If editing, pre-fill the form
+    if (widget.medication != null) {
+      final med = widget.medication!;
+      _nameController.text = med.name;
+      _dosageController.text = med.dosage;
+      _startDateController.text = med.startDate;
+      _endDateController.text = med.endDate ?? '';
+      _instructionsController.text = med.instructions ?? '';
+      _quantityController.text = med.totalQuantity.toString();
+      _refillController.text = med.refillAlertAt.toString();
+      _frequency = med.frequency;
+      _takeWith = med.takeWith;
+      _category = med.category;
+      _doseTimes = List.from(med.doseTimes);
+    }
+  }
 
   @override
   void dispose() {
@@ -57,6 +78,7 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
       if (userId == null) throw Exception("User not logged in");
 
       final medication = Medication(
+        id: widget.medication?.id, // Keep ID if editing
         userId: userId,
         name: _nameController.text.trim(),
         dosage: _dosageController.text.trim(),
@@ -69,14 +91,19 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
         instructions: _instructionsController.text.trim(),
         totalQuantity: int.tryParse(_quantityController.text) ?? 0,
         refillAlertAt: int.tryParse(_refillController.text) ?? 0,
+        lastTaken: widget.medication?.lastTaken,
       );
 
-      await dbService.addMedication(medication);
+      if (widget.medication == null) {
+        await dbService.addMedication(medication);
+      } else {
+        await dbService.updateMedication(medication);
+      }
       
       if (mounted) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Medication added successfully')),
+          SnackBar(content: Text(widget.medication == null ? 'Medication added' : 'Medication updated')),
         );
       }
     } catch (e) {
@@ -92,6 +119,8 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
 
   @override
   Widget build(BuildContext context) {
+    bool isEditing = widget.medication != null;
+
     return Scaffold(
       backgroundColor: AppColors.pageBg,
       body: SafeArea(
@@ -111,20 +140,21 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
                     behavior: HitTestBehavior.opaque,
                     child: const Padding(
                       padding: EdgeInsets.only(right: 12),
-                      child: Text('←', style: TextStyle(fontSize: 20, color: AppColors.blue, fontWeight: FontWeight.bold)),
+                      child: Icon(Icons.arrow_back, color: AppColors.blue),
                     ),
                   ),
-                  const Text('Add Medication', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.blue)),
+                  Text(
+                    isEditing ? 'Edit Medication' : 'Add Medication', 
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.blue)
+                  ),
                 ],
               ),
             ),
             
-            // Scroll Content
             Expanded(
               child: ListView(
                 padding: const EdgeInsets.all(16),
                 children: [
-                  // Section 1
                   _buildSectionHeader('ℹ️', 'Basic Information'),
                   _buildLabel('Medication Name'),
                   _buildInput(controller: _nameController, hint: 'e.g. Amoxicillin'),
@@ -133,92 +163,18 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
                   _buildInput(controller: _dosageController, hint: 'e.g. 500mg, 10ml'),
 
                   _buildLabel('Form / Category'),
-                  Container(
-                    margin: const EdgeInsets.only(bottom: 8),
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                    decoration: BoxDecoration(
-                      color: AppColors.white,
-                      border: Border.all(color: const Color(0xFFCBD5E0)),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<String>(
-                        value: _category,
-                        isExpanded: true,
-                        isDense: true,
-                        style: const TextStyle(color: AppColors.primaryText, fontSize: 13),
-                        onChanged: (String? newValue) {
-                          setState(() {
-                            _category = newValue!;
-                          });
-                        },
-                        items: <String>['Pill', 'Capsule', 'Liquid', 'Injection', 'Other']
-                            .map<DropdownMenuItem<String>>((String value) {
-                          return DropdownMenuItem<String>(
-                            value: value,
-                            child: Text(value),
-                          );
-                        }).toList(),
-                      ),
-                    ),
-                  ),
+                  _buildCategoryDropdown(),
 
-                  // Section 2
                   const SizedBox(height: 12),
                   _buildSectionHeader('⏰', 'Schedule & Frequency'),
                   
                   _buildLabel('How often?'),
-                  _buildGrid(['Daily', 'Weekly', 'Monthly', 'As Needed'], _frequency, (val) => setState(() => _frequency = val), false),
+                  _buildGrid(['Daily', 'Weekly', 'Monthly', 'As Needed'], _frequency, (val) => setState(() => _frequency = val)),
 
                   _buildLabel('Dose Times'),
-                  ..._doseTimes.asMap().entries.map((entry) {
-                    int idx = entry.key;
-                    String time = entry.value;
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                              decoration: BoxDecoration(
-                                color: AppColors.white,
-                                border: Border.all(color: const Color(0xFFCBD5E0)),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Text(time, style: const TextStyle(fontSize: 13, color: AppColors.primaryText)),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          GestureDetector(
-                            onTap: () {
-                              if (_doseTimes.length > 1) {
-                                setState(() => _doseTimes.removeAt(idx));
-                              }
-                            },
-                            child: Container(
-                              padding: const EdgeInsets.all(10),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFFED7D7),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: const Text('🗑️', style: TextStyle(fontSize: 14)),
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }).toList(),
+                  ..._doseTimes.asMap().entries.map((entry) => _buildDoseTimeRow(entry.key, entry.value)),
                   
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: GestureDetector(
-                      onTap: () {
-                        setState(() => _doseTimes.add('08:00 PM'));
-                      },
-                      child: const Text('+ Add another time', style: TextStyle(fontSize: 12, color: Color(0xFF006A60), fontWeight: FontWeight.w700)),
-                    ),
-                  ),
+                  _buildAddAnotherTime(),
 
                   Row(
                     children: [
@@ -244,36 +200,14 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
                     ],
                   ),
 
-                  // Section 3
                   const SizedBox(height: 12),
                   _buildSectionHeader('📋', 'Instructions & Inventory'),
                   
                   _buildLabel('Take With'),
-                  _buildGrid(['Before Meal', 'With Meal', 'After Meal', 'Empty Stomach'], _takeWith, (val) => setState(() => _takeWith = val), true),
+                  _buildGrid(['Before Meal', 'With Meal', 'After Meal', 'Empty Stomach'], _takeWith, (val) => setState(() => _takeWith = val)),
 
                   _buildLabel('Special Instructions'),
-                  Container(
-                    margin: const EdgeInsets.only(bottom: 8),
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                    decoration: BoxDecoration(
-                      color: AppColors.white,
-                      border: Border.all(color: const Color(0xFFCBD5E0)),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    height: 70,
-                    child: TextField(
-                      controller: _instructionsController,
-                      maxLines: 3,
-                      style: const TextStyle(fontSize: 13, color: AppColors.primaryText),
-                      decoration: const InputDecoration(
-                        hintText: 'e.g. Take with plenty of water',
-                        hintStyle: TextStyle(color: Color(0xFFA0AEC0)),
-                        border: InputBorder.none,
-                        isDense: true,
-                        contentPadding: EdgeInsets.zero,
-                      ),
-                    ),
-                  ),
+                  _buildMultiLineInput(controller: _instructionsController, hint: 'e.g. Take with plenty of water'),
 
                   Row(
                     children: [
@@ -313,7 +247,7 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
                       ),
                       child: _isLoading 
                         ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                        : const Text('Save Medication', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
+                        : Text(isEditing ? 'Update Medication' : 'Save Medication', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
                     ),
                   ),
                 ],
@@ -321,6 +255,72 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildCategoryDropdown() {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        border: Border.all(color: const Color(0xFFCBD5E0)),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: _category,
+          isExpanded: true,
+          onChanged: (val) => setState(() => _category = val!),
+          items: ['Pill', 'Capsule', 'Liquid', 'Injection', 'Other'].map((String value) {
+            return DropdownMenuItem<String>(value: value, child: Text(value, style: const TextStyle(fontSize: 14)));
+          }).toList(),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDoseTimeRow(int idx, String time) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        children: [
+          Expanded(
+            child: InkWell(
+              onTap: () async {
+                TimeOfDay? picked = await showTimePicker(context: context, initialTime: TimeOfDay.now());
+                if (picked != null) {
+                  setState(() => _doseTimes[idx] = picked.format(context));
+                }
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                decoration: BoxDecoration(
+                  color: AppColors.white,
+                  border: Border.all(color: const Color(0xFFCBD5E0)),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(time, style: const TextStyle(fontSize: 14)),
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          IconButton(
+            onPressed: () { if (_doseTimes.length > 1) setState(() => _doseTimes.removeAt(idx)); },
+            icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAddAnotherTime() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: GestureDetector(
+        onTap: () => setState(() => _doseTimes.add('08:00 AM')),
+        child: const Text('+ Add another time', style: TextStyle(fontSize: 13, color: Color(0xFF006A60), fontWeight: FontWeight.bold)),
       ),
     );
   }
@@ -348,7 +348,7 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
   Widget _buildInput({required TextEditingController controller, required String hint, TextInputType? keyboardType}) {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       decoration: BoxDecoration(
         color: AppColors.white,
         border: Border.all(color: const Color(0xFFCBD5E0)),
@@ -357,49 +357,52 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
       child: TextField(
         controller: controller,
         keyboardType: keyboardType,
-        style: const TextStyle(fontSize: 13, color: AppColors.primaryText),
-        decoration: InputDecoration(
-          hintText: hint,
-          hintStyle: const TextStyle(color: Color(0xFFA0AEC0)),
-          border: InputBorder.none,
-          isDense: true,
-          contentPadding: EdgeInsets.zero,
-        ),
+        decoration: InputDecoration(hintText: hint, border: InputBorder.none, isDense: true),
       ),
     );
   }
 
-  Widget _buildGrid(List<String> items, String selectedValue, Function(String) onSelect, bool lightActiveBg) {
+  Widget _buildMultiLineInput({required TextEditingController controller, required String hint}) {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
-      child: Wrap(
-        spacing: 8,
-        runSpacing: 8,
-        children: items.map((item) {
-          bool isActive = selectedValue == item;
-          return GestureDetector(
-            onTap: () => onSelect(item),
-            child: Container(
-              width: (MediaQuery.of(context).size.width - 32 - 8) / 2,
-              padding: const EdgeInsets.symmetric(vertical: 10),
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: isActive ? (lightActiveBg ? const Color(0xFFEDF4FF) : AppColors.blue) : AppColors.white,
-                border: Border.all(color: isActive ? AppColors.blue : const Color(0xFFCBD5E0)),
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Text(
-                item,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: isActive ? (lightActiveBg ? AppColors.blue : Colors.white) : const Color(0xFF4A5568),
-                ),
-              ),
-            ),
-          );
-        }).toList(),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        border: Border.all(color: const Color(0xFFCBD5E0)),
+        borderRadius: BorderRadius.circular(6),
       ),
+      child: TextField(
+        controller: controller,
+        maxLines: 3,
+        decoration: InputDecoration(hintText: hint, border: InputBorder.none, isDense: true),
+      ),
+    );
+  }
+
+  Widget _buildGrid(List<String> items, String selectedValue, Function(String) onSelect) {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: items.map((item) {
+        bool isActive = selectedValue == item;
+        return GestureDetector(
+          onTap: () => onSelect(item),
+          child: Container(
+            width: (MediaQuery.of(context).size.width - 32 - 12) / 2,
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: isActive ? AppColors.blue : AppColors.white,
+              border: Border.all(color: isActive ? AppColors.blue : const Color(0xFFCBD5E0)),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Text(
+              item,
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: isActive ? Colors.white : const Color(0xFF4A5568)),
+            ),
+          ),
+        );
+      }).toList(),
     );
   }
 }
