@@ -333,3 +333,43 @@ flowchart TD
     class K external;
 ```
 
+### Caregiver Patient Monitoring
+```mermaid
+flowchart TD
+
+    A([Start]) --> B[Caregiver Login]
+
+    B --> C{Are Login Credentials Valid?}
+
+    C -- No --> D[Display Login Error]
+    D --> B
+
+    C -- Yes --> E[Open Caregiver Dashboard]
+
+    E --> F[View Patient List]
+
+    F --> G[Select Patient]
+
+    G --> H[View Patient Medication Schedule]
+
+    H --> I[View Patient Adherence]
+
+    I --> J[Monitor Patient]
+
+    J --> K{Monitor Another Patient?}
+
+    K -- Yes --> F
+
+    K -- No --> L([End])
+
+
+    %% Styling
+
+    classDef startEnd fill:#ffffff,stroke:#222222,stroke-width:2px;
+    classDef process fill:#eef5ff,stroke:#2563eb,stroke-width:1.5px;
+    classDef decision fill:#fff7ed,stroke:#ea580c,stroke-width:1.5px;
+
+    class A,L startEnd;
+    class B,D,E,F,G,H,I,J process;
+    class C,K decision;
+```
