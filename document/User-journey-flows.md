@@ -373,3 +373,60 @@ flowchart TD
     class B,D,E,F,G,H,I,J process;
     class C,K decision;
 ```
+
+### Caregiver Alerts & Weekly Reporting
+```mermaid
+flowchart TD
+
+    A([Start]) --> B[Monitor Patient Medication Activity]
+
+    B --> C{Has the Patient Missed a Dose?}
+
+    C -- Yes --> D[Generate Missed Dose Alert]
+
+    D --> E[Send Missed Dose Alert]
+
+    E --> F[Caregiver Receives Missed Dose Alert]
+
+    F --> G[Review Patient Medication Status]
+
+    G --> H{Weekly Report Due?}
+
+    C -- No --> H
+
+
+    %% WEEKLY REPORT FLOW
+
+    H -- Yes --> I[Collect Patient Adherence Data]
+
+    I --> J[Generate Weekly Adherence Report]
+
+    J --> K[Send Weekly Caregiver Report]
+
+    K --> L[Email Service Sends Weekly Report]
+
+    L --> M[Caregiver Receives Weekly Report]
+
+    M --> N[Review Weekly Adherence Report]
+
+    N --> O([End])
+
+
+    H -- No --> P[Continue Monitoring]
+
+    P --> B
+
+
+    %% Styling
+
+    classDef startEnd fill:#ffffff,stroke:#222222,stroke-width:2px;
+    classDef process fill:#eef5ff,stroke:#2563eb,stroke-width:1.5px;
+    classDef decision fill:#fff7ed,stroke:#ea580c,stroke-width:1.5px;
+    classDef external fill:#f5f5f5,stroke:#555555,stroke-width:1.5px;
+
+    class A,O startEnd;
+    class B,D,E,F,G,I,J,K,M,N,P process;
+    class C,H decision;
+    class L external;
+```
+
