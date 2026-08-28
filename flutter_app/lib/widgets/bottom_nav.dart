@@ -17,7 +17,7 @@ class BottomNav extends StatelessWidget {
         Navigator.pushReplacementNamed(context, '/meds');
         break;
       case 'History':
-        // Not implemented yet
+        Navigator.pushReplacementNamed(context, '/history');
         break;
       case 'Reports':
         // Not implemented yet

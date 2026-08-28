@@ -4,7 +4,7 @@ import '../constants.dart';
 import '../services/auth_service.dart';
 
 class LoginPage extends StatefulWidget {
-  const LoginPage({Key? key}) : super(key: key);
+  const LoginPage({super.key});
 
   @override
   State<LoginPage> createState() => _LoginPageState();
@@ -32,9 +32,7 @@ class _LoginPageState extends State<LoginPage> {
         _emailCtrl.text.trim(),
         _passCtrl.text.trim(),
       );
-      if (mounted) {
-        Navigator.pushReplacementNamed(context, '/home');
-      }
+      // Navigation is handled by AuthWrapper in main.dart
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -44,6 +42,49 @@ class _LoginPageState extends State<LoginPage> {
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  void _showForgotPassword() {
+    final emailController = TextEditingController(text: _emailCtrl.text);
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Reset Password'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Enter your email to receive a reset link.'),
+            const SizedBox(height: 16),
+            TextField(
+              controller: emailController,
+              decoration: const InputDecoration(hintText: 'Email address'),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          ElevatedButton(
+            onPressed: () async {
+              try {
+                await Provider.of<AuthService>(context, listen: false)
+                    .resetPassword(emailController.text.trim());
+                if (context.mounted) {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Reset link sent! Check your email.')),
+                  );
+                }
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(e.toString())),
+                );
+              }
+            },
+            child: const Text('Send Link'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -56,162 +97,64 @@ class _LoginPageState extends State<LoginPage> {
             child: Container(
               width: double.infinity,
               constraints: const BoxConstraints(maxWidth: 380),
-              child: Container(
-                margin: const EdgeInsets.only(top: 40, left: 16, right: 16, bottom: 20),
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-                decoration: BoxDecoration(
-                  color: AppColors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      offset: const Offset(0, 4),
-                      blurRadius: 10,
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+              child: Column(
+                children: [
+                  Container(
+                    width: 80, height: 80,
+                    decoration: const BoxDecoration(color: Color(0xFFE2E8F0), shape: BoxShape.circle),
+                    alignment: Alignment.center,
+                    margin: const EdgeInsets.only(bottom: 16),
+                    child: const Text('💊', style: TextStyle(fontSize: 32)),
+                  ),
+                  const Text('MediTrack', style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800, color: AppColors.blue)),
+                  const SizedBox(height: 30),
+                  _buildInput(controller: _emailCtrl, hint: 'Email', iconLeft: '✉️'),
+                  _buildInput(
+                    controller: _passCtrl,
+                    hint: 'Password',
+                    iconLeft: '🔒',
+                    obscureText: !_showPassword,
+                    suffixIcon: GestureDetector(
+                      onTap: () => setState(() => _showPassword = !_showPassword),
+                      child: Text(_showPassword ? '👁️' : '🙈', style: const TextStyle(fontSize: 16)),
                     ),
-                  ],
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // Header Box
-                    Column(
-                      children: [
-                        Container(
-                          width: 80,
-                          height: 80,
-                          decoration: const BoxDecoration(
-                            color: Color(0xFFE2E8F0),
-                            shape: BoxShape.circle,
-                          ),
-                          alignment: Alignment.center,
-                          margin: const EdgeInsets.only(bottom: 16),
-                          child: const Text('💊', style: TextStyle(fontSize: 32)),
-                        ),
-                        const Text(
-                          'MediTrack',
-                          style: TextStyle(
-                            fontSize: 26,
-                            fontWeight: FontWeight.w800,
-                            color: AppColors.blue,
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        const Text(
-                          'Welcome back. Please log in to\nmanage your health schedule.',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: Color(0xFF5A6A85),
-                            height: 1.38,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
+                  ),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: _showForgotPassword,
+                      child: const Text('Forgot Password?', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.blue)),
                     ),
-                    const SizedBox(height: 20),
-
-                    // Email Address
-                    const Padding(
-                      padding: EdgeInsets.only(bottom: 8, top: 12),
-                      child: Text(
-                        'Email Address',
-                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF2D3748)),
+                  ),
+                  const SizedBox(height: 20),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton(
+                      onPressed: _isLoading ? null : _login,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.blue,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
                       ),
+                      child: _isLoading 
+                        ? const CircularProgressIndicator(color: Colors.white) 
+                        : const Text('Log In', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                     ),
-                    _buildInput(
-                      controller: _emailCtrl,
-                      hint: 'e.g. john@example.com',
-                      iconLeft: '✉️',
-                      keyboardType: TextInputType.emailAddress,
-                    ),
-
-                    // Password
-                    const Padding(
-                      padding: EdgeInsets.only(bottom: 8, top: 12),
-                      child: Text(
-                        'Password',
-                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF2D3748)),
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text("Don't have an account? "),
+                      GestureDetector(
+                        onTap: () => Navigator.pushNamed(context, '/register'),
+                        child: const Text("Register Here", style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF1B8282), decoration: TextDecoration.underline)),
                       ),
-                    ),
-                    _buildInput(
-                      controller: _passCtrl,
-                      hint: 'Enter your password',
-                      iconLeft: '🔒',
-                      obscureText: !_showPassword,
-                      suffixIcon: GestureDetector(
-                        onTap: () => setState(() => _showPassword = !_showPassword),
-                        child: Container(
-                          padding: const EdgeInsets.all(4),
-                          color: Colors.transparent,
-                          child: Text(_showPassword ? '👁️' : '🙈', style: const TextStyle(fontSize: 16)),
-                        ),
-                      ),
-                    ),
-
-                    // Forgot Password
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        child: GestureDetector(
-                          onTap: () {},
-                          child: const Text(
-                            'Forgot Password?',
-                            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.blue),
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    // Login Button
-                    Container(
-                      margin: const EdgeInsets.only(top: 20),
-                      child: ElevatedButton(
-                        onPressed: _isLoading ? null : _login,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.blue,
-                          foregroundColor: AppColors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(24),
-                          ),
-                          elevation: 0,
-                        ),
-                        child: _isLoading 
-                          ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                          : const Text('Log In', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
-                      ),
-                    ),
-
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 20),
-                      child: Divider(color: AppColors.inputBorder, height: 1),
-                    ),
-
-                    // Footer Row
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Text('Don\'t have an account? ', style: TextStyle(fontSize: 13, color: Color(0xFF5A6A85))),
-                        GestureDetector(
-                          onTap: () {
-                            Navigator.pushReplacementNamed(context, '/register');
-                          },
-                          child: const Text(
-                            'Register Here',
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700,
-                              color: Color(0xFF1B8282),
-                              decoration: TextDecoration.underline,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+                    ],
+                  ),
+                ],
               ),
             ),
           ),
@@ -220,47 +163,20 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  Widget _buildInput({
-    required TextEditingController controller,
-    required String hint,
-    required String iconLeft,
-    bool obscureText = false,
-    TextInputType? keyboardType,
-    Widget? suffixIcon,
-  }) {
+  Widget _buildInput({required TextEditingController controller, required String hint, required String iconLeft, bool obscureText = false, Widget? suffixIcon}) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 4),
-      decoration: BoxDecoration(
-        color: AppColors.inputBg,
-        border: Border.all(color: AppColors.inputBorder),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Stack(
-        alignment: Alignment.centerLeft,
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(left: 12),
-            child: Text(iconLeft, style: const TextStyle(fontSize: 16)),
-          ),
-          TextField(
-            controller: controller,
-            obscureText: obscureText,
-            keyboardType: keyboardType,
-            style: const TextStyle(fontSize: 14, color: AppColors.primaryText),
-            decoration: InputDecoration(
-              hintText: hint,
-              hintStyle: const TextStyle(color: Color(0xFFA0AEC0)),
-              border: InputBorder.none,
-              contentPadding: const EdgeInsets.only(left: 38, right: 14, top: 12, bottom: 12),
-              isDense: true,
-            ),
-          ),
-          if (suffixIcon != null)
-            Positioned(
-              right: 12,
-              child: suffixIcon,
-            ),
-        ],
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(color: AppColors.inputBg, border: Border.all(color: AppColors.inputBorder), borderRadius: BorderRadius.circular(10)),
+      child: TextField(
+        controller: controller,
+        obscureText: obscureText,
+        decoration: InputDecoration(
+          prefixIcon: Container(width: 40, alignment: Alignment.center, child: Text(iconLeft, style: const TextStyle(fontSize: 16))),
+          suffixIcon: suffixIcon != null ? Container(width: 40, alignment: Alignment.center, child: suffixIcon) : null,
+          hintText: hint,
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(vertical: 14),
+        ),
       ),
     );
   }
