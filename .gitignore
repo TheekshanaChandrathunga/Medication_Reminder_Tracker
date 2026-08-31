@@ -12,6 +12,8 @@
 **/GoogleService-Info.plist
 **/firebase_options.dart
 **/.env
+**/.claude
+
 
 # Android Sensitive Files
 **/android/**/generated/
