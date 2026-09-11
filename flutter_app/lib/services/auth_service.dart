@@ -1,62 +1,54 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'database_service.dart';
 
 class AuthService {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final FirebaseFirestore _db = FirebaseFirestore.instance;
+  // Check if Firebase is actually initialized without triggering [core/no-app]
+  bool get isSimulation => Firebase.apps.isEmpty;
 
-  // Simulation flag linked to DatabaseService
-  bool get isSimulation => DatabaseService.isSimulation;
+  // We use getters for instances to ensure they are only called when needed
+  // and after initialization is checked.
+  FirebaseAuth get _auth => FirebaseAuth.instance;
+  FirebaseFirestore get _db => FirebaseFirestore.instance;
 
   Stream<User?> get user {
-    if (isSimulation) {
-      // Return a stream that always says we are logged in
-      return Stream.value(null); 
-    }
+    if (isSimulation) return Stream.value(null);
     return _auth.authStateChanges();
   }
 
   String? get currentUserId {
     if (isSimulation) return "simulated_user_123";
-    return _auth.currentUser?.uid;
-  }
-
-  Future<UserCredential?> registerWithEmail(String email, String password, String name, String userType) async {
-    if (isSimulation) return null;
     try {
-      UserCredential result = await _auth.createUserWithEmailAndPassword(email: email, password: password);
-      if (result.user != null) {
-        await _db.collection('users').doc(result.user!.uid).set({
-          'uid': result.user!.uid,
-          'name': name,
-          'email': email,
-          'role': userType,
-          'createdAt': FieldValue.serverTimestamp(),
-        });
-      }
-      return result;
-    } catch (e) {
-      rethrow;
+      return _auth.currentUser?.uid;
+    } catch (_) {
+      return "simulated_user_123";
     }
   }
 
   Future<UserCredential?> loginWithEmail(String email, String password) async {
     if (isSimulation) return null;
-    try {
-      return await _auth.signInWithEmailAndPassword(email: email, password: password);
-    } catch (e) {
-      rethrow;
+    return await _auth.signInWithEmailAndPassword(email: email, password: password);
+  }
+
+  Future<UserCredential?> registerWithEmail(String email, String password, String name, String userType) async {
+    if (isSimulation) return null;
+    UserCredential result = await _auth.createUserWithEmailAndPassword(email: email, password: password);
+    if (result.user != null) {
+      await _db.collection('users').doc(result.user!.uid).set({
+        'uid': result.user!.uid,
+        'name': name,
+        'email': email,
+        'role': userType,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
     }
+    return result;
   }
 
   Future<void> resetPassword(String email) async {
     if (isSimulation) return;
-    try {
-      await _auth.sendPasswordResetEmail(email: email);
-    } catch (e) {
-      rethrow;
-    }
+    await _auth.sendPasswordResetEmail(email: email);
   }
 
   Future<void> signOut() async {

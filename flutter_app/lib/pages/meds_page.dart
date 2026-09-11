@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../constants.dart';
@@ -37,7 +38,10 @@ class _MedsPageState extends State<MedsPage> {
         content: TextField(
           controller: controller,
           keyboardType: TextInputType.number,
-          decoration: const InputDecoration(hintText: 'Enter quantity to add', border: OutlineInputBorder()),
+          decoration: const InputDecoration(
+            hintText: 'Enter quantity to add',
+            border: OutlineInputBorder(),
+          ),
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
@@ -99,20 +103,28 @@ class _MedsPageState extends State<MedsPage> {
                           const Text('My Medications', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800)),
                           const SizedBox(height: 16),
                           
+                          // Search Box
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 14),
-                            decoration: BoxDecoration(color: const Color(0xFFEBF3FF), borderRadius: BorderRadius.circular(20)),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFEBF3FF), 
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(color: AppColors.inputBorder),
+                            ),
                             child: TextField(
                               controller: _searchCtrl,
                               onChanged: (val) => setState(() => _searchQuery = val),
-                              decoration: const InputDecoration(icon: Icon(Icons.search), hintText: 'Search stock...', border: InputBorder.none),
+                              decoration: const InputDecoration(icon: Icon(Icons.search, size: 20), hintText: 'Search stock...', border: InputBorder.none),
                             ),
                           ),
                           
                           const SizedBox(height: 20),
                           
                           if (medications.isEmpty)
-                            const Center(child: Text("No medications in inventory."))
+                            const Center(child: Padding(
+                              padding: EdgeInsets.all(40.0),
+                              child: Text("No medications in inventory."),
+                            ))
                           else
                             ...medications.map((m) => _buildCard(context, m, dbService)),
                           
@@ -152,11 +164,16 @@ class _MedsPageState extends State<MedsPage> {
       ),
       child: Row(
         children: [
+          // Local Image Display
           Container(
             width: 52, height: 52,
-            decoration: BoxDecoration(color: isLow ? const Color(0xFFFFF5F5) : AppColors.iconBg, borderRadius: BorderRadius.circular(12)),
-            alignment: Alignment.center,
-            child: Text(_getIcon(med.category), style: const TextStyle(fontSize: 20)),
+            decoration: BoxDecoration(
+              color: isLow ? const Color(0xFFFFF5F5) : AppColors.iconBg, 
+              borderRadius: BorderRadius.circular(12)
+            ),
+            child: med.localImagePath != null && File(med.localImagePath!).existsSync()
+                ? ClipRRect(borderRadius: BorderRadius.circular(12), child: Image.file(File(med.localImagePath!), fit: BoxFit.cover))
+                : Center(child: Text(_getIcon(med.category), style: const TextStyle(fontSize: 20))),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -164,11 +181,16 @@ class _MedsPageState extends State<MedsPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(med.name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                Text('${med.totalQuantity} units remaining', style: TextStyle(color: isLow ? Colors.red : AppColors.subText, fontSize: 13, fontWeight: isLow ? FontWeight.bold : FontWeight.normal)),
+                Text('${med.totalQuantity} units remaining', 
+                  style: TextStyle(
+                    color: isLow ? Colors.red : AppColors.subText, 
+                    fontSize: 13, 
+                    fontWeight: isLow ? FontWeight.bold : FontWeight.normal
+                  )),
               ],
             ),
           ),
-          PopupMenuButton(
+          PopupMenuButton<String>(
             onSelected: (val) {
               if (val == 'edit') {
                 Navigator.push(context, MaterialPageRoute(builder: (context) => AddMedicationPage(medication: med)));

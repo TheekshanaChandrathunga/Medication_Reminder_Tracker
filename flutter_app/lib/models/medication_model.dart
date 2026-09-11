@@ -15,6 +15,7 @@ class Medication {
   final int totalQuantity;
   final int refillAlertAt;
   final DateTime? lastTaken;
+  final String? localImagePath; // New field for local media path
 
   Medication({
     this.id,
@@ -31,6 +32,7 @@ class Medication {
     required this.totalQuantity,
     required this.refillAlertAt,
     this.lastTaken,
+    this.localImagePath,
   });
 
   Map<String, dynamic> toMap() {
@@ -48,12 +50,12 @@ class Medication {
       'totalQuantity': totalQuantity,
       'refillAlertAt': refillAlertAt,
       'lastTaken': lastTaken != null ? Timestamp.fromDate(lastTaken!) : null,
+      'localImagePath': localImagePath, // Store only the text path
       'createdAt': FieldValue.serverTimestamp(),
     };
   }
 
   factory Medication.fromMap(Map<String, dynamic> map, String documentId) {
-    // Robust parsing to prevent crashes if Firestore data is inconsistent
     return Medication(
       id: documentId,
       userId: map['userId']?.toString() ?? '',
@@ -69,6 +71,7 @@ class Medication {
       totalQuantity: int.tryParse(map['totalQuantity']?.toString() ?? '0') ?? 0,
       refillAlertAt: int.tryParse(map['refillAlertAt']?.toString() ?? '0') ?? 0,
       lastTaken: map['lastTaken'] is Timestamp ? (map['lastTaken'] as Timestamp).toDate() : null,
+      localImagePath: map['localImagePath']?.toString(),
     );
   }
 }

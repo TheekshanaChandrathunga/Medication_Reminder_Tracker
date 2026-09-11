@@ -34,7 +34,7 @@ class HistoryPage extends StatelessWidget {
                         decoration: const BoxDecoration(color: Color(0xFFE2E8F0), shape: BoxShape.circle),
                         alignment: Alignment.center,
                         margin: const EdgeInsets.only(right: 8),
-                        child: const Text('📋', style: TextStyle(fontSize: 16)),
+                        child: const Icon(Icons.history_rounded, size: 18, color: AppColors.blue),
                       ),
                       const Text('Adherence History', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.blue)),
                     ],
@@ -74,6 +74,8 @@ class HistoryPage extends StatelessWidget {
                               itemBuilder: (context, index) {
                                 final log = logs[index];
                                 final dynamic rawTimestamp = log['takenAt'];
+                                final String status = log['status'] ?? 'taken';
+                                final bool isTaken = status == 'taken';
                                 
                                 String dateStr = 'Unknown date';
                                 String timeStr = '';
@@ -91,10 +93,21 @@ class HistoryPage extends StatelessWidget {
                                     color: AppColors.white,
                                     borderRadius: BorderRadius.circular(12),
                                     border: Border.all(color: AppColors.inputBorder),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.02),
+                                        blurRadius: 4,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ],
                                   ),
                                   child: Row(
                                     children: [
-                                      const Icon(Icons.check_circle, color: Color(0xFF38A169), size: 24),
+                                      Icon(
+                                        isTaken ? Icons.check_circle : Icons.cancel, 
+                                        color: isTaken ? const Color(0xFF38A169) : Colors.redAccent, 
+                                        size: 28
+                                      ),
                                       const SizedBox(width: 12),
                                       Expanded(
                                         child: Column(
@@ -105,7 +118,7 @@ class HistoryPage extends StatelessWidget {
                                               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
                                             ),
                                             Text(
-                                              'Taken on $dateStr at $timeStr',
+                                              '${isTaken ? 'Taken' : 'Missed'} on $dateStr at $timeStr',
                                               style: const TextStyle(color: AppColors.subText, fontSize: 12),
                                             ),
                                           ],

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
@@ -17,17 +18,23 @@ class _SplashPageState extends State<SplashPage> {
   }
 
   Future<void> _navigateToNext() async {
-    // Wait for splash animation and Firebase Auth state
     await Future.delayed(const Duration(milliseconds: 2500));
     
     if (!mounted) return;
 
-    // Check if user is logged in
-    final user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
+    bool isSimulation = Firebase.apps.isEmpty;
+    
+    if (isSimulation) {
+      // In simulation mode, skip auth check and go home
       Navigator.pushReplacementNamed(context, '/home');
     } else {
-      Navigator.pushReplacementNamed(context, '/login');
+      // Real mode: check auth
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        Navigator.pushReplacementNamed(context, '/home');
+      } else {
+        Navigator.pushReplacementNamed(context, '/login');
+      }
     }
   }
 
@@ -40,8 +47,7 @@ class _SplashPageState extends State<SplashPage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              width: 120,
-              height: 120,
+              width: 120, height: 120,
               decoration: BoxDecoration(
                 color: const Color(0xFF0A1118),
                 borderRadius: BorderRadius.circular(30),
@@ -52,11 +58,7 @@ class _SplashPageState extends State<SplashPage> {
             const SizedBox(height: 24),
             const Text(
               'MediTrack',
-              style: TextStyle(
-                fontSize: 32,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF0A5B80),
-              ),
+              style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Color(0xFF0A5B80)),
             ),
             const SizedBox(height: 10),
             const CircularProgressIndicator(
