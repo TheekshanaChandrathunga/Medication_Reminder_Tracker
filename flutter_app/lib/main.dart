@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
@@ -20,11 +21,25 @@ import 'services/database_service.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  // Try to initialize Firebase, but don't crash if it fails (allows simulation mode)
+  // Initialize Firebase with your SPECIFIC web configuration
   try {
-    await Firebase.initializeApp();
+    if (kIsWeb) {
+      await Firebase.initializeApp(
+        options: const FirebaseOptions(
+          apiKey: "AIzaSyCBx1c79dUynrvHKIDZuWliVkkcNP0n9bg",
+          authDomain: "meditrack-3a657.firebaseapp.com",
+          projectId: "meditrack-3a657",
+          storageBucket: "meditrack-3a657.firebasestorage.app",
+          messagingSenderId: "468859237025",
+          appId: "1:468859237025:web:cf5f892827131d1f9bb6e0",
+        ),
+      );
+    } else {
+      // For mobile, this will use the google-services.json in the android/app folder
+      await Firebase.initializeApp();
+    }
   } catch (e) {
-    debugPrint("Firebase init failed, switching to Simulation Mode: $e");
+    debugPrint("Firebase initialization failed: $e");
   }
   
   await initializeDateFormatting('en_US', null);
@@ -75,7 +90,7 @@ class AuthWrapper extends StatelessWidget {
   Widget build(BuildContext context) {
     final authService = Provider.of<AuthService>(context);
     
-    // In Simulation Mode, skip the Auth check and go to Home
+    // Fallback to Home if Firebase is missing/Simulation mode is on
     if (DatabaseService.isSimulation) {
       return const HomePage();
     }

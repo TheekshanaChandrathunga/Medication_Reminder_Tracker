@@ -1,76 +1,65 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_core/firebase_core.dart';
 import '../models/medication_model.dart';
 import 'dart:async';
 
 class DatabaseService {
-  final FirebaseFirestore _db = FirebaseFirestore.instance;
-  
-  // Set this to TRUE to show the app working without a real Firebase connection
-  static const bool isSimulation = true;
+  // Set to FALSE to use your live Firebase configuration
+  static bool get isSimulation => Firebase.apps.isEmpty;
 
-  // Add Medication
+  FirebaseFirestore get _db => FirebaseFirestore.instance;
+
+  // --- MEDICATION OPERATIONS ---
+
   Future<void> addMedication(Medication medication) async {
-    if (isSimulation) {
-      await Future.delayed(const Duration(seconds: 1));
-      return;
-    }
+    if (isSimulation) return;
     await _db.collection('medications').add(medication.toMap());
   }
 
-  // Get Medications
   Stream<List<Medication>> getMedications(String userId) {
     if (isSimulation) {
       return Stream.value([
         Medication(
-          id: '1', userId: userId, name: 'Aspirin', dosage: '81mg', 
+          id: 'sim_1', userId: userId, name: 'Aspirin', dosage: '81mg', 
           category: 'Pill', frequency: 'Daily', doseTimes: ['08:00 AM'], 
-          startDate: '2023-10-24', takeWith: 'With Food', totalQuantity: 30, refillAlertAt: 5
-        ),
-        Medication(
-          id: '2', userId: userId, name: 'Metformin', dosage: '500mg', 
-          category: 'Pill', frequency: 'Daily', doseTimes: ['07:00 PM'], 
-          startDate: '2023-10-24', takeWith: 'After Meal', totalQuantity: 3, refillAlertAt: 10
+          startDate: '2023-10-24', takeWith: 'With Food', totalQuantity: 24, refillAlertAt: 5
         ),
       ]);
     }
-    return _db.collection('medications').where('userId', isEqualTo: userId).snapshots().map((snapshot) => 
-      snapshot.docs.map((doc) => Medication.fromMap(doc.data(), doc.id)).toList());
+    return _db
+        .collection('medications')
+        .where('userId', isEqualTo: userId)
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map((doc) => Medication.fromMap(doc.data(), doc.id))
+            .toList());
   }
 
-  // Get User Profile
-  Stream<Map<String, dynamic>?> getUserProfile(String userId) {
-    if (isSimulation) {
-      return Stream.value({
-        'name': 'Demo User',
-        'email': 'demo@example.com',
-        'role': 'Patient',
-      });
-    }
-    return _db.collection('users').doc(userId).snapshots().map((snap) {
-      if (!snap.exists) return null;
-      return snap.data() as Map<String, dynamic>?;
-    });
-  }
-
-  // Mark as Taken
+  // Mark as Taken (Atomic Stock Management)
   Future<void> markAsTaken(Medication med) async {
-    if (isSimulation) {
-      await Future.delayed(const Duration(milliseconds: 500));
-      return;
-    }
+    if (isSimulation || med.id == null) return;
     final medRef = _db.collection('medications').doc(med.id);
+    final logRef = _db.collection('adherence_logs').doc();
+
     return _db.runTransaction((transaction) async {
-      DocumentSnapshot snap = await transaction.get(medRef);
-      if (!snap.exists) return;
-      int stock = int.tryParse(snap.get('totalQuantity').toString()) ?? 0;
+      DocumentSnapshot snapshot = await transaction.get(medRef);
+      int currentStock = int.tryParse(snapshot.get('totalQuantity').toString()) ?? 0;
+      
       transaction.update(medRef, {
         'lastTaken': FieldValue.serverTimestamp(),
-        'totalQuantity': stock > 0 ? stock - 1 : 0,
+        'totalQuantity': currentStock > 0 ? currentStock - 1 : 0,
+      });
+
+      transaction.set(logRef, {
+        'userId': med.userId,
+        'medicationId': med.id,
+        'medicationName': med.name,
+        'takenAt': FieldValue.serverTimestamp(),
+        'status': 'taken',
       });
     });
   }
 
-  // Mark as Missed
   Future<void> markAsMissed(Medication med) async {
     if (isSimulation) return;
     await _db.collection('adherence_logs').add({
@@ -84,27 +73,27 @@ class DatabaseService {
 
   // Get Adherence Logs
   Stream<List<Map<String, dynamic>>> getAdherenceLogs(String userId) {
-    if (isSimulation) {
-      return Stream.value([
-        {
-          'medicationName': 'Aspirin', 
-          'takenAt': Timestamp.fromDate(DateTime.now().subtract(const Duration(hours: 2))), 
-          'status': 'taken'
-        },
-        {
-          'medicationName': 'Metformin', 
-          'takenAt': Timestamp.fromDate(DateTime.now().subtract(const Duration(days: 1))), 
-          'status': 'missed'
-        },
-      ]);
-    }
-    return _db.collection('adherence_logs').where('userId', isEqualTo: userId).snapshots().map((snapshot) =>
-      snapshot.docs.map((doc) => doc.data()).toList());
+    if (isSimulation) return Stream.value([]);
+    return _db.collection('adherence_logs')
+        .where('userId', isEqualTo: userId)
+        .snapshots()
+        .map((snapshot) {
+          final logs = snapshot.docs.map((doc) => doc.data()).toList();
+          logs.sort((a, b) {
+            final tA = a['takenAt'] as Timestamp?;
+            final tB = b['takenAt'] as Timestamp?;
+            if (tA == null || tB == null) return 0;
+            return tB.compareTo(tA);
+          });
+          return logs;
+        });
   }
 
   Future<void> refillMedication(String medId, int amount) async {
     if (isSimulation) return;
-    await _db.collection('medications').doc(medId).update({'totalQuantity': FieldValue.increment(amount)});
+    await _db.collection('medications').doc(medId).update({
+      'totalQuantity': FieldValue.increment(amount),
+    });
   }
 
   Future<void> deleteMedication(String medId) async {
@@ -119,6 +108,15 @@ class DatabaseService {
 
   Future<void> updateProfile(String userId, String name, String role) async {
     if (isSimulation) return;
-    await _db.collection('users').doc(userId).update({'name': name, 'role': role});
+    await _db.collection('users').doc(userId).set({
+      'name': name,
+      'role': role,
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+  }
+
+  Stream<Map<String, dynamic>?> getUserProfile(String userId) {
+    if (isSimulation) return Stream.value({'name': 'Demo User', 'role': 'Patient'});
+    return _db.collection('users').doc(userId).snapshots().map((snap) => snap.data() as Map<String, dynamic>?);
   }
 }
