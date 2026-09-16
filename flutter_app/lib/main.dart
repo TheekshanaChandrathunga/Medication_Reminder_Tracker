@@ -19,14 +19,14 @@ import 'services/database_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   // Try to initialize Firebase, but don't crash if it fails (allows simulation mode)
   try {
     await Firebase.initializeApp();
   } catch (e) {
     debugPrint("Firebase init failed, switching to Simulation Mode: $e");
   }
-  
+
   await initializeDateFormatting('en_US', null);
   runApp(const MediTrackApp());
 }
@@ -74,7 +74,7 @@ class AuthWrapper extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final authService = Provider.of<AuthService>(context);
-    
+
     // In Simulation Mode, skip the Auth check and go to Home
     if (DatabaseService.isSimulation) {
       return const HomePage();
