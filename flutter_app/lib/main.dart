@@ -20,8 +20,8 @@ import 'services/database_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
-  // Initialize Firebase with your SPECIFIC web configuration
+
+  // Initialize Firebase
   try {
     if (kIsWeb) {
       await Firebase.initializeApp(
@@ -35,14 +35,17 @@ void main() async {
         ),
       );
     } else {
-      // For mobile, this will use the google-services.json in the android/app folder
+      // For mobile, use google-services.json
       await Firebase.initializeApp();
     }
   } catch (e) {
+    // Don't crash if Firebase initialization fails.
+    // This allows simulation mode to continue.
     debugPrint("Firebase initialization failed: $e");
   }
-  
+
   await initializeDateFormatting('en_US', null);
+
   runApp(const MediTrackApp());
 }
 
@@ -53,8 +56,12 @@ class MediTrackApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        Provider<AuthService>(create: (_) => AuthService()),
-        Provider<DatabaseService>(create: (_) => DatabaseService()),
+        Provider<AuthService>(
+          create: (_) => AuthService(),
+        ),
+        Provider<DatabaseService>(
+          create: (_) => DatabaseService(),
+        ),
       ],
       child: MaterialApp(
         title: 'MediTrack',
@@ -64,7 +71,9 @@ class MediTrackApp extends StatelessWidget {
           scaffoldBackgroundColor: AppColors.pageBg,
           primaryColor: AppColors.blue,
           useMaterial3: true,
-          colorScheme: ColorScheme.fromSeed(seedColor: AppColors.blue),
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: AppColors.blue,
+          ),
         ),
         home: const AuthWrapper(),
         routes: {
@@ -89,8 +98,8 @@ class AuthWrapper extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final authService = Provider.of<AuthService>(context);
-    
-    // Fallback to Home if Firebase is missing/Simulation mode is on
+
+    // In simulation mode, skip the Firebase authentication check.
     if (DatabaseService.isSimulation) {
       return const HomePage();
     }
@@ -101,9 +110,11 @@ class AuthWrapper extends StatelessWidget {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const SplashPage();
         }
+
         if (snapshot.hasData) {
           return const HomePage();
         }
+
         return const LoginPage();
       },
     );
