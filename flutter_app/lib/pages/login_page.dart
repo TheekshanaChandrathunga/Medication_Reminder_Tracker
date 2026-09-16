@@ -17,9 +17,12 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _passCtrl = TextEditingController();
 
   Future<void> _login() async {
-    if (_emailCtrl.text.isEmpty || _passCtrl.text.isEmpty) {
+    final email = _emailCtrl.text.trim();
+    final password = _passCtrl.text.trim();
+
+    if (email.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill all fields')),
+        const SnackBar(content: Text('Please enter email and password')),
       );
       return;
     }
@@ -28,15 +31,17 @@ class _LoginPageState extends State<LoginPage> {
     
     try {
       final authService = Provider.of<AuthService>(context, listen: false);
-      await authService.loginWithEmail(
-        _emailCtrl.text.trim(),
-        _passCtrl.text.trim(),
-      );
-      // Navigation is handled by AuthWrapper in main.dart
+      await authService.loginWithEmail(email, password);
+      // Navigation is automatically handled by AuthWrapper in main.dart
     } catch (e) {
       if (mounted) {
+        String message = e.toString();
+        // Clean up common Firebase error messages for the user
+        if (message.contains('invalid-credential')) message = 'Invalid email or password';
+        if (message.contains('network-request-failed')) message = 'Check your internet connection';
+        
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString())),
+          SnackBar(content: Text(message.replaceAll(RegExp(r'\[.*?\]'), '').trim())),
         );
       }
     } finally {
@@ -57,7 +62,10 @@ class _LoginPageState extends State<LoginPage> {
             const SizedBox(height: 16),
             TextField(
               controller: emailController,
-              decoration: const InputDecoration(hintText: 'Email address'),
+              decoration: const InputDecoration(
+                hintText: 'Email address',
+                border: OutlineInputBorder(),
+              ),
             ),
           ],
         ),
@@ -76,7 +84,7 @@ class _LoginPageState extends State<LoginPage> {
                 }
               } catch (e) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(e.toString())),
+                  const SnackBar(content: Text('Error: Could not send reset link')),
                 );
               }
             },
@@ -96,28 +104,42 @@ class _LoginPageState extends State<LoginPage> {
           child: SingleChildScrollView(
             child: Container(
               width: double.infinity,
-              constraints: const BoxConstraints(maxWidth: 380),
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+              constraints: const BoxConstraints(maxWidth: 400),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
               child: Column(
                 children: [
                   Container(
-                    width: 80, height: 80,
-                    decoration: const BoxDecoration(color: Color(0xFFE2E8F0), shape: BoxShape.circle),
+                    width: 100,
+                    height: 100,
+                    decoration: BoxDecoration(
+                      color: AppColors.blue.withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
                     alignment: Alignment.center,
-                    margin: const EdgeInsets.only(bottom: 16),
-                    child: const Text('💊', style: TextStyle(fontSize: 32)),
+                    child: const Text('💊', style: TextStyle(fontSize: 48)),
                   ),
-                  const Text('MediTrack', style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800, color: AppColors.blue)),
-                  const SizedBox(height: 30),
-                  _buildInput(controller: _emailCtrl, hint: 'Email', iconLeft: '✉️'),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'MediTrack',
+                    style: TextStyle(fontSize: 32, fontWeight: FontWeight.w900, color: AppColors.blue),
+                  ),
+                  const Text('Your Smart Medication Companion', style: TextStyle(color: AppColors.subText)),
+                  const SizedBox(height: 48),
+                  _buildInput(
+                    controller: _emailCtrl,
+                    hint: 'Email Address',
+                    icon: Icons.email_outlined,
+                    keyboardType: TextInputType.emailAddress,
+                  ),
+                  const SizedBox(height: 16),
                   _buildInput(
                     controller: _passCtrl,
                     hint: 'Password',
-                    iconLeft: '🔒',
+                    icon: Icons.lock_outline,
                     obscureText: !_showPassword,
-                    suffixIcon: GestureDetector(
-                      onTap: () => setState(() => _showPassword = !_showPassword),
-                      child: Text(_showPassword ? '👁️' : '🙈', style: const TextStyle(fontSize: 16)),
+                    suffixIcon: IconButton(
+                      icon: Icon(_showPassword ? Icons.visibility_off : Icons.visibility, color: Colors.grey),
+                      onPressed: () => setState(() => _showPassword = !_showPassword),
                     ),
                   ),
                   Align(
@@ -127,30 +149,34 @@ class _LoginPageState extends State<LoginPage> {
                       child: const Text('Forgot Password?', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.blue)),
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 32),
                   SizedBox(
                     width: double.infinity,
-                    height: 50,
+                    height: 54,
                     child: ElevatedButton(
                       onPressed: _isLoading ? null : _login,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.blue,
                         foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        elevation: 0,
                       ),
                       child: _isLoading 
-                        ? const CircularProgressIndicator(color: Colors.white) 
-                        : const Text('Log In', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                        ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 3))
+                        : const Text('Log In', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                     ),
                   ),
                   const SizedBox(height: 24),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Text("Don't have an account? "),
+                      const Text("New here? "),
                       GestureDetector(
                         onTap: () => Navigator.pushNamed(context, '/register'),
-                        child: const Text("Register Here", style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF1B8282), decoration: TextDecoration.underline)),
+                        child: const Text(
+                          "Create an account",
+                          style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.blue, decoration: TextDecoration.underline)
+                        ),
                       ),
                     ],
                   ),
@@ -163,19 +189,32 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  Widget _buildInput({required TextEditingController controller, required String hint, required String iconLeft, bool obscureText = false, Widget? suffixIcon}) {
+  Widget _buildInput({
+    required TextEditingController controller,
+    required String hint,
+    required IconData icon,
+    bool obscureText = false,
+    Widget? suffixIcon,
+    TextInputType? keyboardType,
+  }) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(color: AppColors.inputBg, border: Border.all(color: AppColors.inputBorder), borderRadius: BorderRadius.circular(10)),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.inputBorder),
+      ),
       child: TextField(
         controller: controller,
         obscureText: obscureText,
+        keyboardType: keyboardType,
+        style: const TextStyle(fontSize: 16),
         decoration: InputDecoration(
-          prefixIcon: Container(width: 40, alignment: Alignment.center, child: Text(iconLeft, style: const TextStyle(fontSize: 16))),
-          suffixIcon: suffixIcon != null ? Container(width: 40, alignment: Alignment.center, child: suffixIcon) : null,
+          prefixIcon: Icon(icon, color: AppColors.blue, size: 22),
+          suffixIcon: suffixIcon,
           hintText: hint,
+          hintStyle: const TextStyle(color: Colors.grey),
           border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(vertical: 14),
+          contentPadding: const EdgeInsets.symmetric(vertical: 16),
         ),
       ),
     );

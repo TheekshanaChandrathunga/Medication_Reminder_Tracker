@@ -11,6 +11,17 @@ file storage, push notifications, and backend services.
 ---
 
 ## 1. Architecture Overview
+The Medication Reminder & Tracker App is a Flutter-based mobile
+application using Firebase as the backend platform.
+
+The system consists of:
+
+- Flutter Mobile Application
+- Firebase Authentication
+- Cloud Firestore
+- Firebase Cloud Messaging
+- Firebase Storage
+- Local Offline Storage / Cache
 
 ```mermaid
 flowchart TB

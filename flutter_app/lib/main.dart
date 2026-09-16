@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
@@ -20,14 +21,31 @@ import 'services/database_service.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Try to initialize Firebase, but don't crash if it fails (allows simulation mode)
+  // Initialize Firebase
   try {
-    await Firebase.initializeApp();
+    if (kIsWeb) {
+      await Firebase.initializeApp(
+        options: const FirebaseOptions(
+          apiKey: "AIzaSyCBx1c79dUynrvHKIDZuWliVkkcNP0n9bg",
+          authDomain: "meditrack-3a657.firebaseapp.com",
+          projectId: "meditrack-3a657",
+          storageBucket: "meditrack-3a657.firebasestorage.app",
+          messagingSenderId: "468859237025",
+          appId: "1:468859237025:web:cf5f892827131d1f9bb6e0",
+        ),
+      );
+    } else {
+      // For mobile, use google-services.json
+      await Firebase.initializeApp();
+    }
   } catch (e) {
-    debugPrint("Firebase init failed, switching to Simulation Mode: $e");
+    // Don't crash if Firebase initialization fails.
+    // This allows simulation mode to continue.
+    debugPrint("Firebase initialization failed: $e");
   }
 
   await initializeDateFormatting('en_US', null);
+
   runApp(const MediTrackApp());
 }
 
@@ -38,8 +56,12 @@ class MediTrackApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        Provider<AuthService>(create: (_) => AuthService()),
-        Provider<DatabaseService>(create: (_) => DatabaseService()),
+        Provider<AuthService>(
+          create: (_) => AuthService(),
+        ),
+        Provider<DatabaseService>(
+          create: (_) => DatabaseService(),
+        ),
       ],
       child: MaterialApp(
         title: 'MediTrack',
@@ -49,7 +71,9 @@ class MediTrackApp extends StatelessWidget {
           scaffoldBackgroundColor: AppColors.pageBg,
           primaryColor: AppColors.blue,
           useMaterial3: true,
-          colorScheme: ColorScheme.fromSeed(seedColor: AppColors.blue),
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: AppColors.blue,
+          ),
         ),
         home: const AuthWrapper(),
         routes: {
@@ -75,7 +99,7 @@ class AuthWrapper extends StatelessWidget {
   Widget build(BuildContext context) {
     final authService = Provider.of<AuthService>(context);
 
-    // In Simulation Mode, skip the Auth check and go to Home
+    // In simulation mode, skip the Firebase authentication check.
     if (DatabaseService.isSimulation) {
       return const HomePage();
     }
@@ -86,9 +110,11 @@ class AuthWrapper extends StatelessWidget {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const SplashPage();
         }
+
         if (snapshot.hasData) {
           return const HomePage();
         }
+
         return const LoginPage();
       },
     );
