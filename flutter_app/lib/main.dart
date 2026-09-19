@@ -22,8 +22,9 @@ import 'services/database_service.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Initialize Firebase with your SPECIFIC web configuration
   try {
-    if (Firebase.apps.isEmpty && kIsWeb) {
+      if (Firebase.apps.isEmpty) {
       await Firebase.initializeApp(
         options: const FirebaseOptions(
           apiKey: "AIzaSyCBx1c79dUynrvHKIDZuWliVkkcNP0n9bg",
@@ -34,14 +35,16 @@ void main() async {
           appId: "1:468859237025:web:cf5f892827131d1f9bb6e0",
         ),
       );
-    } else if (Firebase.apps.isEmpty) {
+    } else {
+      // For mobile, this will use the google-services.json in the android/app folder
       await Firebase.initializeApp();
     }
   } catch (e) {
-    debugPrint('Firebase initialization failed: $e');
+    debugPrint("Firebase initialization failed: $e");
   }
 
   await initializeDateFormatting('en_US', null);
+
   runApp(const MediTrackApp());
 }
 
@@ -52,8 +55,12 @@ class MediTrackApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        Provider<AuthService>(create: (_) => AuthService()),
-        Provider<DatabaseService>(create: (_) => DatabaseService()),
+        Provider<AuthService>(
+          create: (_) => AuthService(),
+        ),
+        Provider<DatabaseService>(
+          create: (_) => DatabaseService(),
+        ),
       ],
       child: MaterialApp(
         title: 'MediTrack',
@@ -63,7 +70,9 @@ class MediTrackApp extends StatelessWidget {
           scaffoldBackgroundColor: AppColors.pageBg,
           primaryColor: AppColors.blue,
           useMaterial3: true,
-          colorScheme: ColorScheme.fromSeed(seedColor: AppColors.blue),
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: AppColors.blue,
+          ),
         ),
         home: const AuthWrapper(),
         routes: {
@@ -95,6 +104,7 @@ class AuthWrapper extends StatelessWidget {
   Widget build(BuildContext context) {
     final authService = Provider.of<AuthService>(context);
 
+    // Fallback to Home if Firebase is missing/Simulation mode is on
     if (DatabaseService.isSimulation) {
       return const HomePage();
     }
@@ -105,9 +115,11 @@ class AuthWrapper extends StatelessWidget {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const SplashPage();
         }
+
         if (snapshot.hasData) {
           return const HomePage();
         }
+
         return const LoginPage();
       },
     );
