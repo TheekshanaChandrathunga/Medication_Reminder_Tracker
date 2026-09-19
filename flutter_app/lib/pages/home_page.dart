@@ -16,23 +16,23 @@ class HomePage extends StatelessWidget {
     if (med.lastTaken == null) return false;
     final now = DateTime.now();
     return med.lastTaken!.year == now.year &&
-           med.lastTaken!.month == now.month &&
-           med.lastTaken!.day == now.day;
+        med.lastTaken!.month == now.month &&
+        med.lastTaken!.day == now.day;
   }
 
   bool _isDueNow(List<String> doseTimes) {
     if (doseTimes.isEmpty) return false;
     final now = DateTime.now();
     final currentTimeStr = DateFormat('hh:mm a').format(now);
-    
+
     for (var timeStr in doseTimes) {
       try {
         final cleanTime = timeStr.trim().toUpperCase();
         final doseTime = DateFormat('hh:mm a').parse(cleanTime);
         final nowTime = DateFormat('hh:mm a').parse(currentTimeStr);
-        
+
         final diff = nowTime.difference(doseTime).inMinutes.abs();
-        if (diff <= 60) return true; 
+        if (diff <= 60) return true; // High alert if due within 1 hour
       } catch (e) {
         continue;
       }
@@ -53,77 +53,109 @@ class HomePage extends StatelessWidget {
           children: [
             Column(
               children: [
+                // Header
                 Container(
-                  padding: const EdgeInsets.only(left: 20, right: 16, top: 16, bottom: 10),
+                  padding: const EdgeInsets.only(
+                      left: 20, right: 16, top: 16, bottom: 10),
                   color: AppColors.white,
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('MediTrack', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: AppColors.blue)),
+                      const Text('MediTrack',
+                          style: TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.w900,
+                              color: AppColors.blue)),
                       IconButton(
-                        icon: const Icon(Icons.logout_rounded, color: AppColors.blue),
+                        icon: const Icon(Icons.logout_rounded,
+                            color: AppColors.blue),
                         onPressed: () async {
                           await authService.signOut();
-                          if (context.mounted) Navigator.pushReplacementNamed(context, '/login');
+                          if (context.mounted)
+                            Navigator.pushReplacementNamed(context, '/login');
                         },
                       )
                     ],
                   ),
                 ),
-                
+
                 Expanded(
-                  child: userId == null 
-                  ? const Center(child: CircularProgressIndicator())
-                  : StreamBuilder<List<Medication>>(
-                    stream: dbService.getMedications(userId),
-                    builder: (context, snapshot) {
-                      if (snapshot.hasError) return Center(child: Text("Error: ${snapshot.error}"));
-                      if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
-                      
-                      final medications = snapshot.data ?? [];
-                      final takenToday = medications.where((m) => _isTakenToday(m)).length;
-                      final total = medications.length;
-                      final progress = total == 0 ? 0.0 : takenToday / total;
-                      final today = DateFormat('EEEE, MMM d').format(DateTime.now());
+                  child: userId == null
+                      ? const Center(child: CircularProgressIndicator())
+                      : StreamBuilder<List<Medication>>(
+                          key: ValueKey(userId),
+                          stream: dbService.getMedications(userId),
+                          builder: (context, snapshot) {
+                            if (snapshot.hasError)
+                              return Center(
+                                  child: Text("Error: ${snapshot.error}"));
+                            if (snapshot.connectionState ==
+                                ConnectionState.waiting)
+                              return const Center(
+                                  child: CircularProgressIndicator());
 
-                      return ListView(
-                        padding: const EdgeInsets.all(16),
-                        children: [
-                          _buildWelcomeCard(today, takenToday, total, progress),
-                          
-                          ...medications.where((m) => m.totalQuantity <= m.refillAlertAt && m.totalQuantity > 0).map((m) => 
-                            _buildInventoryAlert(m)
-                          ),
+                            final medications = snapshot.data ?? [];
+                            final takenToday = medications
+                                .where((m) => _isTakenToday(m))
+                                .length;
+                            final total = medications.length;
+                            final progress =
+                                total == 0 ? 0.0 : takenToday / total;
+                            final today = DateFormat('EEEE, MMM d')
+                                .format(DateTime.now());
 
-                          const Padding(
-                            padding: EdgeInsets.symmetric(vertical: 16),
-                            child: Text("Today's Schedule", style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.primaryText)),
-                          ),
-                          
-                          if (medications.isEmpty)
-                            _buildEmptyState()
-                          else
-                            ...medications.map((med) => _buildMedCard(context, med, dbService)),
-                          
-                          const SizedBox(height: 100),
-                        ],
-                      );
-                    }
-                  ),
+                            return ListView(
+                              padding: const EdgeInsets.all(16),
+                              children: [
+                                _buildWelcomeCard(
+                                    today, takenToday, total, progress),
+
+                                // Inventory warnings
+                                ...medications
+                                    .where((m) =>
+                                        m.totalQuantity <= m.refillAlertAt &&
+                                        m.totalQuantity > 0)
+                                    .map((m) => _buildInventoryAlert(m)),
+
+                                const Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 16),
+                                  child: Text("Today's Schedule",
+                                      style: TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.w800,
+                                          color: AppColors.primaryText)),
+                                ),
+
+                                if (medications.isEmpty)
+                                  _buildEmptyState()
+                                else
+                                  ...medications.map((med) =>
+                                      _buildMedCard(context, med, dbService)),
+
+                                const SizedBox(height: 100), // Bottom padding
+                              ],
+                            );
+                          }),
                 ),
               ],
             ),
-            
             Positioned(
-              bottom: 70, right: 20,
+              bottom: 70,
+              right: 20,
               child: FloatingActionButton.extended(
                 onPressed: () => Navigator.pushNamed(context, '/addMed'),
                 backgroundColor: AppColors.blue,
-                label: const Text('Add Med', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+                label: const Text('Add Med',
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold, color: Colors.white)),
                 icon: const Icon(Icons.add, color: Colors.white),
               ),
             ),
-            const Positioned(bottom: 0, left: 0, right: 0, child: BottomNav(activeTab: 'Home')),
+            const Positioned(
+                bottom: 0,
+                left: 0,
+                right: 0,
+                child: BottomNav(activeTab: 'Home')),
           ],
         ),
       ),
@@ -135,10 +167,13 @@ class HomePage extends StatelessWidget {
       child: Column(
         children: [
           const SizedBox(height: 40),
-          Icon(Icons.medication_outlined, size: 80, color: Colors.grey.shade300),
+          Icon(Icons.medication_rounded, size: 80, color: Colors.grey.shade300),
           const SizedBox(height: 16),
-          const Text("No medications added yet.", style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
-          const Text("Tap '+' to get started.", style: TextStyle(color: Colors.grey, fontSize: 13)),
+          const Text("No medications added yet.",
+              style:
+                  TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
+          const Text("Tap '+' to get started.",
+              style: TextStyle(color: Colors.grey, fontSize: 13)),
         ],
       ),
     );
@@ -149,15 +184,21 @@ class HomePage extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFF5F5), 
-        border: Border.all(color: const Color(0xFFFEB2B2)), 
-        borderRadius: BorderRadius.circular(12)
-      ),
+          color: const Color(0xFFFFF5F5),
+          border: Border.all(color: const Color(0xFFFEB2B2)),
+          borderRadius: BorderRadius.circular(12)),
       child: Row(
         children: [
-          const Icon(Icons.warning_amber_rounded, color: Color(0xFFC53030), size: 20),
+          const Icon(Icons.warning_amber_rounded,
+              color: Color(0xFFC53030), size: 20),
           const SizedBox(width: 10),
-          Expanded(child: Text('Refill soon: ${med.name} (${med.totalQuantity} left)', style: const TextStyle(color: Color(0xFFC53030), fontWeight: FontWeight.bold, fontSize: 12))),
+          Expanded(
+              child: Text(
+                  'Refill soon: ${med.name} (${med.totalQuantity} left)',
+                  style: const TextStyle(
+                      color: Color(0xFFC53030),
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12))),
         ],
       ),
     );
@@ -170,29 +211,52 @@ class HomePage extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.blue,
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: AppColors.blue.withOpacity(0.2), blurRadius: 10, offset: const Offset(0, 5))],
+        boxShadow: [
+          BoxShadow(
+              color: AppColors.blue.withValues(alpha: 0.2),
+              blurRadius: 10,
+              offset: const Offset(0, 5))
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Healthy Day!', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: Colors.white)),
-          Text(date, style: const TextStyle(fontSize: 14, color: Colors.white70)),
+          Text('Healthy Day!',
+              style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w900,
+                  color: Colors.white)),
+          Text(date,
+              style: const TextStyle(fontSize: 14, color: Colors.white70)),
           const SizedBox(height: 20),
           Row(
             children: [
               Stack(
                 alignment: Alignment.center,
                 children: [
-                  CircularProgressIndicator(value: progress, backgroundColor: Colors.white24, strokeWidth: 6, color: Colors.white),
-                  Text('${(progress * 100).toInt()}%', style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white)),
+                  CircularProgressIndicator(
+                      value: progress,
+                      backgroundColor: Colors.white24,
+                      strokeWidth: 6,
+                      color: Colors.white),
+                  Text('${(progress * 100).toInt()}%',
+                      style: const TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white)),
                 ],
               ),
               const SizedBox(width: 16),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('$taken of $total doses taken', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 16)),
-                  const Text('Real-time adherence sync', style: TextStyle(fontSize: 12, color: Colors.white60)),
+                  Text('$taken of $total doses taken',
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          fontSize: 16)),
+                  const Text('Real-time sync active',
+                      style: TextStyle(fontSize: 12, color: Colors.white60)),
                 ],
               )
             ],
@@ -202,7 +266,8 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  Widget _buildMedCard(BuildContext context, Medication med, DatabaseService db) {
+  Widget _buildMedCard(
+      BuildContext context, Medication med, DatabaseService db) {
     final isTakenToday = _isTakenToday(med);
     final isNow = !isTakenToday && _isDueNow(med.doseTimes);
 
@@ -212,61 +277,94 @@ class HomePage extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: isNow ? AppColors.blue : AppColors.inputBorder, width: isNow ? 2 : 1),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 5, offset: const Offset(0, 2))],
+        border: Border.all(
+            color: isNow ? AppColors.blue : AppColors.inputBorder,
+            width: isNow ? 2 : 1),
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black.withValues(alpha: 0.02),
+              blurRadius: 5,
+              offset: const Offset(0, 2))
+        ],
       ),
       child: Column(
         children: [
           Row(
             children: [
+              // Display local image if available, otherwise show emoji
               Container(
-                width: 55, height: 55,
-                decoration: BoxDecoration(color: isNow ? AppColors.blue : AppColors.iconBg, borderRadius: BorderRadius.circular(12)),
-                child: (!kIsWeb && med.localImagePath != null && File(med.localImagePath!).existsSync())
-                    ? ClipRRect(borderRadius: BorderRadius.circular(12), child: Image.file(File(med.localImagePath!), fit: BoxFit.cover))
-                    : Center(child: Text(med.category == 'Pill' ? '💊' : '🧪', style: TextStyle(fontSize: 28, color: isNow ? Colors.white : null))),
+                width: 55,
+                height: 55,
+                decoration: BoxDecoration(
+                    color: isNow ? AppColors.blue : AppColors.iconBg,
+                    borderRadius: BorderRadius.circular(12)),
+                child: (!kIsWeb &&
+                        med.localImagePath != null &&
+                        File(med.localImagePath!).existsSync())
+                    ? ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Image.file(File(med.localImagePath!),
+                            fit: BoxFit.cover))
+                    : Center(
+                        child: Text(med.category == 'Pill' ? '💊' : '🧪',
+                            style: TextStyle(
+                                fontSize: 28,
+                                color: isNow ? Colors.white : null))),
               ),
               const SizedBox(width: 16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(med.name, style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, decoration: isTakenToday ? TextDecoration.lineThrough : null)),
-                    Text('${med.dosage} • ${med.doseTimes.join(", ")}', style: const TextStyle(fontSize: 13, color: AppColors.subText)),
+                    Text(med.name,
+                        style: TextStyle(
+                            fontSize: 17,
+                            fontWeight: FontWeight.bold,
+                            decoration: isTakenToday
+                                ? TextDecoration.lineThrough
+                                : null)),
+                    Text('${med.dosage} • ${med.doseTimes.join(", ")}',
+                        style: const TextStyle(
+                            fontSize: 13, color: AppColors.subText)),
                   ],
                 ),
               ),
-              if (isTakenToday) const Icon(Icons.check_circle_rounded, color: Colors.green, size: 28),
-              if (isNow) Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4), decoration: BoxDecoration(color: AppColors.blue, borderRadius: BorderRadius.circular(6)), child: const Text('NOW', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold))),
+              if (isTakenToday)
+                const Icon(Icons.check_circle_rounded,
+                    color: Colors.green, size: 28),
+              if (isNow)
+                Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                        color: AppColors.blue,
+                        borderRadius: BorderRadius.circular(6)),
+                    child: const Text('NOW',
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold))),
             ],
           ),
           if (!isTakenToday)
             Padding(
               padding: const EdgeInsets.only(top: 14),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => db.markAsMissed(med),
-                      style: OutlinedButton.styleFrom(foregroundColor: Colors.redAccent, side: const BorderSide(color: Colors.redAccent)),
-                      child: const Text('Missed'),
-                    ),
+              child: SizedBox(
+                width: double.infinity,
+                height: 45,
+                child: ElevatedButton(
+                  onPressed: () => db.markAsTaken(med),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor:
+                        isNow ? AppColors.blue : Colors.grey.shade100,
+                    foregroundColor: isNow ? Colors.white : Colors.black87,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)),
                   ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    flex: 2,
-                    child: ElevatedButton(
-                      onPressed: () => db.markAsTaken(med),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: isNow ? AppColors.blue : Colors.grey.shade100,
-                        foregroundColor: isNow ? Colors.white : Colors.black87,
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                      ),
-                      child: const Text('Mark as Taken', style: TextStyle(fontWeight: FontWeight.bold)),
-                    ),
-                  ),
-                ],
+                  child: const Text('Mark as Taken',
+                      style: TextStyle(fontWeight: FontWeight.bold)),
+                ),
               ),
             ),
         ],

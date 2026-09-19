@@ -35,8 +35,8 @@ class Medication {
     this.localImagePath,
   });
 
-  Map<String, dynamic> toMap() {
-    return {
+  Map<String, dynamic> toMap({bool includeCreatedAt = false}) {
+    final data = <String, dynamic>{
       'userId': userId,
       'name': name,
       'dosage': dosage,
@@ -51,8 +51,13 @@ class Medication {
       'refillAlertAt': refillAlertAt,
       'lastTaken': lastTaken != null ? Timestamp.fromDate(lastTaken!) : null,
       'localImagePath': localImagePath, // Store only the text path
-      'createdAt': FieldValue.serverTimestamp(),
     };
+
+    if (includeCreatedAt) {
+      data['createdAt'] = FieldValue.serverTimestamp();
+    }
+
+    return data;
   }
 
   factory Medication.fromMap(Map<String, dynamic> map, String documentId) {
@@ -63,14 +68,17 @@ class Medication {
       dosage: map['dosage']?.toString() ?? '',
       category: map['category']?.toString() ?? 'Pill',
       frequency: map['frequency']?.toString() ?? 'Daily',
-      doseTimes: map['doseTimes'] != null ? List<String>.from(map['doseTimes']) : [],
+      doseTimes:
+          map['doseTimes'] != null ? List<String>.from(map['doseTimes']) : [],
       startDate: map['startDate']?.toString() ?? '',
       endDate: map['endDate']?.toString(),
       takeWith: map['takeWith']?.toString() ?? 'Before Meal',
       instructions: map['instructions']?.toString(),
       totalQuantity: int.tryParse(map['totalQuantity']?.toString() ?? '0') ?? 0,
       refillAlertAt: int.tryParse(map['refillAlertAt']?.toString() ?? '0') ?? 0,
-      lastTaken: map['lastTaken'] is Timestamp ? (map['lastTaken'] as Timestamp).toDate() : null,
+      lastTaken: map['lastTaken'] is Timestamp
+          ? (map['lastTaken'] as Timestamp).toDate()
+          : null,
       localImagePath: map['localImagePath']?.toString(),
     );
   }
