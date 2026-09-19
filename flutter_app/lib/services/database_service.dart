@@ -45,6 +45,7 @@ class DatabaseService {
 
       transaction.update(medRef, {
         'lastTaken': FieldValue.serverTimestamp(),
+        'lastMissed': null,
         'totalQuantity': currentStock > 0 ? currentStock - 1 : 0,
       });
 
@@ -60,13 +61,21 @@ class DatabaseService {
 
   Future<void> markAsMissed(Medication med) async {
     _ensureFirebaseAvailable();
-    await _db.collection('adherence_logs').add({
+    if (med.id == null) throw StateError('Medication has no document id');
+
+    final medicationRef = _db.collection('medications').doc(med.id);
+    final logRef = _db.collection('adherence_logs').doc();
+    final batch = _db.batch();
+
+    batch.update(medicationRef, {'lastMissed': FieldValue.serverTimestamp()});
+    batch.set(logRef, {
       'userId': med.userId,
       'medicationId': med.id,
       'medicationName': med.name,
       'takenAt': FieldValue.serverTimestamp(),
       'status': 'missed',
     });
+    await batch.commit();
   }
 
   // Get Adherence Logs

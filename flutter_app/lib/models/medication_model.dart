@@ -15,6 +15,7 @@ class Medication {
   final int totalQuantity;
   final int refillAlertAt;
   final DateTime? lastTaken;
+  final DateTime? lastMissed;
   final String? localImagePath; // New field for local media path
 
   Medication({
@@ -32,6 +33,7 @@ class Medication {
     required this.totalQuantity,
     required this.refillAlertAt,
     this.lastTaken,
+    this.lastMissed,
     this.localImagePath,
   });
 
@@ -50,6 +52,7 @@ class Medication {
       'totalQuantity': totalQuantity,
       'refillAlertAt': refillAlertAt,
       'lastTaken': lastTaken != null ? Timestamp.fromDate(lastTaken!) : null,
+      'lastMissed': lastMissed != null ? Timestamp.fromDate(lastMissed!) : null,
       'localImagePath': localImagePath, // Store only the text path
     };
 
@@ -78,6 +81,9 @@ class Medication {
       refillAlertAt: int.tryParse(map['refillAlertAt']?.toString() ?? '0') ?? 0,
       lastTaken: map['lastTaken'] is Timestamp
           ? (map['lastTaken'] as Timestamp).toDate()
+          : null,
+      lastMissed: map['lastMissed'] is Timestamp
+          ? (map['lastMissed'] as Timestamp).toDate()
           : null,
       localImagePath: map['localImagePath']?.toString(),
     );

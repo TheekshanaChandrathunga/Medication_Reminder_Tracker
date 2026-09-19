@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
@@ -9,15 +10,68 @@ import '../services/auth_service.dart';
 import '../services/database_service.dart';
 import '../models/medication_model.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
-  bool _isTakenToday(Medication med) {
-    if (med.lastTaken == null) return false;
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  Timer? _scheduleRefreshTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _scheduleRefreshTimer = Timer.periodic(const Duration(minutes: 1), (_) {
+      if (mounted) setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _scheduleRefreshTimer?.cancel();
+    super.dispose();
+  }
+
+  bool _isTakenForCurrentDose(Medication med) {
+    if (med.lastTaken == null || med.doseTimes.isEmpty) return false;
+
+    final currentDose = _currentScheduledDose(med.doseTimes);
+    return currentDose != null && !med.lastTaken!.isBefore(currentDose);
+  }
+
+  bool _isMissedForCurrentDose(Medication med) {
+    if (med.lastMissed == null || med.doseTimes.isEmpty) return false;
+
+    final currentDose = _currentScheduledDose(med.doseTimes);
+    return currentDose != null && !med.lastMissed!.isBefore(currentDose);
+  }
+
+  DateTime? _currentScheduledDose(List<String> doseTimes) {
     final now = DateTime.now();
-    return med.lastTaken!.year == now.year &&
-        med.lastTaken!.month == now.month &&
-        med.lastTaken!.day == now.day;
+    DateTime? currentDose;
+    for (final timeString in doseTimes) {
+      try {
+        final parsedTime =
+            DateFormat('hh:mm a').parse(timeString.trim().toUpperCase());
+        final scheduledDose = DateTime(
+          now.year,
+          now.month,
+          now.day,
+          parsedTime.hour,
+          parsedTime.minute,
+        );
+        if (!scheduledDose.isAfter(now) &&
+            (currentDose == null || scheduledDose.isAfter(currentDose))) {
+          currentDose = scheduledDose;
+        }
+      } catch (_) {
+        continue;
+      }
+    }
+
+    return currentDose;
   }
 
   bool _isDueNow(List<String> doseTimes) {
@@ -96,7 +150,7 @@ class HomePage extends StatelessWidget {
 
                             final medications = snapshot.data ?? [];
                             final takenToday = medications
-                                .where((m) => _isTakenToday(m))
+                                .where((m) => _isTakenForCurrentDose(m))
                                 .length;
                             final total = medications.length;
                             final progress =
@@ -268,18 +322,25 @@ class HomePage extends StatelessWidget {
 
   Widget _buildMedCard(
       BuildContext context, Medication med, DatabaseService db) {
-    final isTakenToday = _isTakenToday(med);
-    final isNow = !isTakenToday && _isDueNow(med.doseTimes);
+    final isTakenForCurrentDose = _isTakenForCurrentDose(med);
+    final isMissedForCurrentDose =
+        !isTakenForCurrentDose && _isMissedForCurrentDose(med);
+    final isNow = !isTakenForCurrentDose && _isDueNow(med.doseTimes);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.white,
+        color:
+            isMissedForCurrentDose ? const Color(0xFFFFF5F5) : AppColors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-            color: isNow ? AppColors.blue : AppColors.inputBorder,
-            width: isNow ? 2 : 1),
+            color: isMissedForCurrentDose
+                ? Colors.redAccent
+                : isNow
+                    ? AppColors.blue
+                    : AppColors.inputBorder,
+            width: isMissedForCurrentDose || isNow ? 2 : 1),
         boxShadow: [
           BoxShadow(
               color: Colors.black.withValues(alpha: 0.02),
@@ -296,7 +357,11 @@ class HomePage extends StatelessWidget {
                 width: 55,
                 height: 55,
                 decoration: BoxDecoration(
-                    color: isNow ? AppColors.blue : AppColors.iconBg,
+                    color: isMissedForCurrentDose
+                        ? Colors.redAccent
+                        : isNow
+                            ? AppColors.blue
+                            : AppColors.iconBg,
                     borderRadius: BorderRadius.circular(12)),
                 child: (!kIsWeb &&
                         med.localImagePath != null &&
@@ -309,7 +374,9 @@ class HomePage extends StatelessWidget {
                         child: Text(med.category == 'Pill' ? '💊' : '🧪',
                             style: TextStyle(
                                 fontSize: 28,
-                                color: isNow ? Colors.white : null))),
+                                color: isMissedForCurrentDose || isNow
+                                    ? Colors.white
+                                    : null))),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -320,7 +387,10 @@ class HomePage extends StatelessWidget {
                         style: TextStyle(
                             fontSize: 17,
                             fontWeight: FontWeight.bold,
-                            decoration: isTakenToday
+                            color: isMissedForCurrentDose
+                                ? Colors.red.shade900
+                                : null,
+                            decoration: isTakenForCurrentDose
                                 ? TextDecoration.lineThrough
                                 : null)),
                     Text('${med.dosage} • ${med.doseTimes.join(", ")}',
@@ -329,9 +399,12 @@ class HomePage extends StatelessWidget {
                   ],
                 ),
               ),
-              if (isTakenToday)
+              if (isTakenForCurrentDose)
                 const Icon(Icons.check_circle_rounded,
                     color: Colors.green, size: 28),
+              if (isMissedForCurrentDose)
+                const Icon(Icons.warning_rounded,
+                    color: Colors.redAccent, size: 28),
               if (isNow)
                 Container(
                     padding:
@@ -346,25 +419,48 @@ class HomePage extends StatelessWidget {
                             fontWeight: FontWeight.bold))),
             ],
           ),
-          if (!isTakenToday)
+          if (!isTakenForCurrentDose)
             Padding(
               padding: const EdgeInsets.only(top: 14),
-              child: SizedBox(
-                width: double.infinity,
-                height: 45,
-                child: ElevatedButton(
-                  onPressed: () => db.markAsTaken(med),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor:
-                        isNow ? AppColors.blue : Colors.grey.shade100,
-                    foregroundColor: isNow ? Colors.white : Colors.black87,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10)),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: SizedBox(
+                      height: 45,
+                      child: ElevatedButton(
+                        onPressed: () => db.markAsTaken(med),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor:
+                              isNow ? AppColors.blue : Colors.grey.shade100,
+                          foregroundColor:
+                              isNow ? Colors.white : Colors.black87,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10)),
+                        ),
+                        child: const Text('Mark as Taken',
+                            style: TextStyle(fontWeight: FontWeight.bold)),
+                      ),
+                    ),
                   ),
-                  child: const Text('Mark as Taken',
-                      style: TextStyle(fontWeight: FontWeight.bold)),
-                ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: SizedBox(
+                      height: 45,
+                      child: OutlinedButton(
+                        onPressed: () => db.markAsMissed(med),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.redAccent,
+                          side: const BorderSide(color: Colors.redAccent),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10)),
+                        ),
+                        child: const Text('Mark as Missed',
+                            style: TextStyle(fontWeight: FontWeight.bold)),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
         ],
