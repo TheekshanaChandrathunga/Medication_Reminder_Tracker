@@ -51,6 +51,8 @@ class _LoginPageState extends State<LoginPage> {
 
   void _showForgotPassword() {
     final emailController = TextEditingController(text: _emailCtrl.text);
+    final passwordController = TextEditingController();
+    final confirmPasswordController = TextEditingController();
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -58,12 +60,34 @@ class _LoginPageState extends State<LoginPage> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('Enter your email to receive a reset link.'),
+            const Text('Enter your email and create a new password.'),
             const SizedBox(height: 16),
             TextField(
               controller: emailController,
+              keyboardType: TextInputType.emailAddress,
               decoration: const InputDecoration(
-                hintText: 'Email address',
+                labelText: 'Email address',
+                prefixIcon: Icon(Icons.email_outlined),
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: passwordController,
+              obscureText: true,
+              decoration: const InputDecoration(
+                labelText: 'New password',
+                prefixIcon: Icon(Icons.lock_outline),
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: confirmPasswordController,
+              obscureText: true,
+              decoration: const InputDecoration(
+                labelText: 'Confirm new password',
+                prefixIcon: Icon(Icons.lock_outline),
                 border: OutlineInputBorder(),
               ),
             ),
@@ -73,22 +97,41 @@ class _LoginPageState extends State<LoginPage> {
           TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
           ElevatedButton(
             onPressed: () async {
+              final email = emailController.text.trim();
+              final password = passwordController.text;
+
+              if (email.isEmpty || password.length < 6) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Enter an email and a password with at least 6 characters')),
+                );
+                return;
+              }
+
+              if (password != confirmPasswordController.text) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Passwords do not match')),
+                );
+                return;
+              }
+
               try {
                 await Provider.of<AuthService>(context, listen: false)
-                    .resetPassword(emailController.text.trim());
+                    .resetPassword(email);
                 if (context.mounted) {
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Reset link sent! Check your email.')),
+                    const SnackBar(content: Text('Reset link sent! Use it to finish setting your new password.')),
                   );
                 }
               } catch (e) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Error: Could not send reset link')),
-                );
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Error: Could not reset password')),
+                  );
+                }
               }
             },
-            child: const Text('Send Link'),
+            child: const Text('Save Password'),
           ),
         ],
       ),
@@ -112,7 +155,7 @@ class _LoginPageState extends State<LoginPage> {
                     width: 100,
                     height: 100,
                     decoration: BoxDecoration(
-                      color: AppColors.blue.withOpacity(0.1),
+                      color: AppColors.blue.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
                     alignment: Alignment.center,
