@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'dart:typed_data';
 import '../models/medication_model.dart';
 import 'dart:async';
 
@@ -126,6 +128,20 @@ class DatabaseService {
     await _db.collection('users').doc(userId).set({
       'name': name,
       'role': role,
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+  }
+
+  Future<void> uploadProfileImage(String userId, Uint8List imageBytes) async {
+    _ensureFirebaseAvailable();
+    final imageRef = FirebaseStorage.instance
+        .ref()
+        .child('profile_images')
+        .child('$userId.jpg');
+    await imageRef.putData(imageBytes, SettableMetadata(contentType: 'image/jpeg'));
+    final photoUrl = await imageRef.getDownloadURL();
+    await _db.collection('users').doc(userId).set({
+      'photoUrl': photoUrl,
       'updatedAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
   }
