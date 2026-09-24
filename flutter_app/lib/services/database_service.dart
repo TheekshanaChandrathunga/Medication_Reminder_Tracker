@@ -134,11 +134,26 @@ class DatabaseService {
 
   Future<void> uploadProfileImage(String userId, Uint8List imageBytes) async {
     _ensureFirebaseAvailable();
+    if (userId.trim().isEmpty) {
+      throw ArgumentError('A user id is required to upload a profile image');
+    }
+    if (imageBytes.isEmpty) {
+      throw ArgumentError('The profile image is empty');
+    }
+
+    final uploadId = DateTime.now().microsecondsSinceEpoch;
     final imageRef = FirebaseStorage.instance
         .ref()
         .child('profile_images')
-        .child('$userId.jpg');
-    await imageRef.putData(imageBytes, SettableMetadata(contentType: 'image/jpeg'));
+        .child(userId)
+        .child('$uploadId.jpg');
+    await imageRef.putData(
+      imageBytes,
+      SettableMetadata(
+        contentType: 'image/jpeg',
+        cacheControl: 'no-cache, max-age=0',
+      ),
+    );
     final photoUrl = await imageRef.getDownloadURL();
     await _db.collection('users').doc(userId).set({
       'photoUrl': photoUrl,
