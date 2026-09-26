@@ -605,6 +605,17 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.7.12"
+<<<<<<< Updated upstream
+=======
+  timezone:
+    dependency: "direct main"
+    description:
+      name: timezone
+      sha256: dd14a3b83cfd7cb19e7888f1cbc20f258b8d71b54c06f79ac585f14093a287d1
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.10.1"
+>>>>>>> Stashed changes
   typed_data:
     dependency: transitive
     description:
@@ -617,10 +628,17 @@ packages:
     dependency: transitive
     description:
       name: vector_math
+<<<<<<< Updated upstream
       sha256: f36f9f3be64c6198714492bb455c11056e33e2f85d9a0b676a48301e44fdcf47
       url: "https://pub.dev"
     source: hosted
     version: "2.4.2"
+=======
+      sha256: "92b9910f66ed1057fd4da7b040ae7c74cafacf885bdc81be496928d5049b032d"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.4.3"
+>>>>>>> Stashed changes
   vm_service:
     dependency: transitive
     description:
@@ -654,5 +672,10 @@ packages:
     source: hosted
     version: "3.1.4"
 sdks:
+<<<<<<< Updated upstream
   dart: ">=3.12.0 <4.0.0"
   flutter: ">=3.44.0"
+=======
+  dart: ">=3.11.0-0 <4.0.0"
+  flutter: ">=3.32.0"
+>>>>>>> Stashed changes

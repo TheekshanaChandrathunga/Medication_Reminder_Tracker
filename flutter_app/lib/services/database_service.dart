@@ -134,5 +134,14 @@ class DatabaseService {
   Stream<Map<String, dynamic>?> getUserProfile(String userId) {
     if (isSimulation) return Stream.value({'name': 'Demo User', 'role': 'Patient'});
     return _db.collection('users').doc(userId).snapshots().map((snap) => snap.data() as Map<String, dynamic>?);
+<<<<<<< Updated upstream
+=======
+  }
+
+  void _ensureFirebaseAvailable() {
+    if (isSimulation) {
+      throw StateError('Firebase is not initialized. Check the Firebase configuration.');
+    }
+>>>>>>> Stashed changes
   }
 }
