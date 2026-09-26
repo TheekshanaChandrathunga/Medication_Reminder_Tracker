@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 import 'constants.dart';
+import 'models/medication_model.dart';
 import 'pages/splash_page.dart';
 import 'pages/login_page.dart';
 import 'pages/register_page.dart';
@@ -17,13 +18,13 @@ import 'pages/history_page.dart';
 import 'pages/reports_page.dart';
 import 'services/auth_service.dart';
 import 'services/database_service.dart';
+import 'services/notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize Firebase
   try {
-    if (kIsWeb) {
+    if (Firebase.apps.isEmpty && kIsWeb) {
       await Firebase.initializeApp(
         options: const FirebaseOptions(
           apiKey: "AIzaSyCBx1c79dUynrvHKIDZuWliVkkcNP0n9bg",
@@ -34,17 +35,15 @@ void main() async {
           appId: "1:468859237025:web:cf5f892827131d1f9bb6e0",
         ),
       );
-    } else {
-      // For mobile, use google-services.json
+    } else if (Firebase.apps.isEmpty) {
       await Firebase.initializeApp();
     }
   } catch (e) {
-    // Don't crash if Firebase initialization fails.
-    // This allows simulation mode to continue.
-    debugPrint("Firebase initialization failed: $e");
+    debugPrint('Firebase initialization failed: $e');
   }
 
   await initializeDateFormatting('en_US', null);
+  await NotificationService.instance.initialize();
 
   runApp(const MediTrackApp());
 }
@@ -82,7 +81,13 @@ class MediTrackApp extends StatelessWidget {
           '/register': (context) => const RegisterPage(),
           '/home': (context) => const HomePage(),
           '/meds': (context) => const MedsPage(),
-          '/addMed': (context) => const AddMedicationPage(),
+          '/addMed': (context) {
+            final args = ModalRoute.of(context)?.settings.arguments;
+            if (args is Medication) {
+              return AddMedicationPage(medication: args);
+            }
+            return const AddMedicationPage();
+          },
           '/profile': (context) => const ProfilePage(),
           '/history': (context) => const HistoryPage(),
           '/reports': (context) => const ReportsPage(),
@@ -99,7 +104,6 @@ class AuthWrapper extends StatelessWidget {
   Widget build(BuildContext context) {
     final authService = Provider.of<AuthService>(context);
 
-    // In simulation mode, skip the Firebase authentication check.
     if (DatabaseService.isSimulation) {
       return const HomePage();
     }

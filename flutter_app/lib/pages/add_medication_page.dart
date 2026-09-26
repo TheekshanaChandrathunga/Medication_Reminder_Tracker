@@ -70,7 +70,7 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
   Future<void> _pickImage() async {
     if (kIsWeb) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Image picking is not supported on web.')),
+        const SnackBar(content: Text('Image picking is only supported on mobile devices.')),
       );
       return;
     }
@@ -200,18 +200,19 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
                     child: GestureDetector(
                       onTap: _pickImage,
                       child: Container(
-                        width: 100, height: 100,
+                        width: 120,
+                        height: 120,
                         decoration: BoxDecoration(
                           color: Colors.grey.shade200,
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(16),
                           border: Border.all(color: AppColors.inputBorder),
                         ),
                         child: _localImagePath != null && !kIsWeb && File(_localImagePath!).existsSync()
                             ? ClipRRect(
-                                borderRadius: BorderRadius.circular(12), 
+                                borderRadius: BorderRadius.circular(16), 
                                 child: Image.file(File(_localImagePath!), fit: BoxFit.cover),
                               )
-                            : const Icon(Icons.add_a_photo_outlined, color: Colors.grey),
+                            : const Icon(Icons.add_a_photo_outlined, size: 40, color: Colors.grey),
                       ),
                     ),
                   ),
@@ -295,7 +296,7 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
                     ],
                   ),
 
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 24),
                   SizedBox(
                     width: double.infinity,
                     height: 50,
@@ -304,7 +305,7 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.blue,
                         foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                         elevation: 0,
                       ),
                       child: _isLoading 
