@@ -1,13 +1,82 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:provider/provider.dart';
 import '../constants.dart';
 import '../widgets/bottom_nav.dart';
 import '../services/auth_service.dart';
 import '../services/database_service.dart';
 
-class ReportsPage extends StatelessWidget {
+class ReportsPage extends StatefulWidget {
   const ReportsPage({super.key});
+
+  @override
+  State<ReportsPage> createState() => _ReportsPageState();
+}
+
+class _ReportsPageState extends State<ReportsPage> {
+  String? _selectedAction;
+  String _selectedPeriod = 'This Week';
+  DateTimeRange? _customRange;
+
+  DateTime? _logDate(Map<String, dynamic> log) {
+    final value = log['takenAt'];
+    if (value is Timestamp) return value.toDate();
+    if (value is DateTime) return value;
+    return null;
+  }
+
+  List<Map<String, dynamic>> _filterLogs(List<Map<String, dynamic>> logs) {
+    final now = DateTime.now();
+    DateTime start;
+    DateTime end = now;
+
+    if (_selectedPeriod == 'This Month') {
+      start = DateTime(now.year, now.month, 1);
+    } else if (_selectedPeriod == 'Custom' && _customRange != null) {
+      start = DateTime(
+        _customRange!.start.year,
+        _customRange!.start.month,
+        _customRange!.start.day,
+      );
+      end = DateTime(
+        _customRange!.end.year,
+        _customRange!.end.month,
+        _customRange!.end.day,
+        23,
+        59,
+        59,
+      );
+    } else {
+      start = DateTime(now.year, now.month, now.day)
+          .subtract(const Duration(days: 6));
+    }
+
+    return logs.where((log) {
+      final date = _logDate(log);
+      return date != null && !date.isBefore(start) && !date.isAfter(end);
+    }).toList();
+  }
+
+  Future<void> _selectPeriod(String period) async {
+    if (period == 'Custom') {
+      final range = await showDateRangePicker(
+        context: context,
+        firstDate: DateTime(2020),
+        lastDate: DateTime.now(),
+        initialDateRange: _customRange,
+      );
+      if (range == null || !mounted) return;
+      setState(() {
+        _customRange = range;
+        _selectedPeriod = period;
+      });
+      return;
+    }
+
+    setState(() {
+      _selectedPeriod = period;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -22,53 +91,57 @@ class ReportsPage extends StatelessWidget {
           children: [
             Column(
               children: [
-                // Header
                 Container(
-                  padding: const EdgeInsets.only(left: 20, right: 20, top: 16, bottom: 10),
+                  width: double.infinity,
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 10),
                   color: AppColors.white,
-                  child: const Row(
+                  child: Row(
                     children: [
-                      Text('Adherence Reports', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.blue)),
+                      const Icon(Icons.arrow_back, size: 20, color: AppColors.blue),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'Adherence Report',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.blue,
+                        ),
+                      ),
                     ],
                   ),
                 ),
-
                 Expanded(
                   child: userId == null
-                      ? const Center(child: Text("Please login to see reports"))
+                      ? const Center(child: Text('Please login to see reports'))
                       : StreamBuilder<List<Map<String, dynamic>>>(
                           stream: dbService.getAdherenceLogs(userId),
                           builder: (context, snapshot) {
                             if (snapshot.connectionState == ConnectionState.waiting) {
                               return const Center(child: CircularProgressIndicator());
                             }
-                            
-                            final logs = snapshot.data ?? [];
+
+                            final logs = _filterLogs(snapshot.data ?? []);
                             final takenCount = logs.where((l) => l['status'] == 'taken').length;
                             final missedCount = logs.where((l) => l['status'] == 'missed').length;
                             final total = takenCount + missedCount;
-                            final percentage = total == 0 ? 0 : (takenCount / total * 100).toInt();
+                            final percentage = total == 0 ? 0 : ((takenCount / total) * 100).round();
 
                             return ListView(
-                              padding: const EdgeInsets.all(16),
+                              padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
                               children: [
+                                _buildReportTabs(),
+                                const SizedBox(height: 18),
                                 _buildSummaryCard(takenCount, missedCount, percentage),
-                                const SizedBox(height: 24),
-                                const Text('Insights', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                                const SizedBox(height: 18),
+                                _buildSectionTitle('Daily Adherence'),
+                                const SizedBox(height: 10),
+                                _buildWeekStrip(),
+                                const SizedBox(height: 18),
+                                _buildActionButton('Generate PDF', Icons.picture_as_pdf_rounded),
                                 const SizedBox(height: 12),
-                                _buildInsightTile(
-                                  icon: Icons.trending_up,
-                                  color: Colors.green,
-                                  title: 'Consistency',
-                                  subtitle: percentage > 80 ? 'Excellent! You are staying on track.' : 'Try to improve your daily routine.',
-                                ),
-                                _buildInsightTile(
-                                  icon: Icons.inventory_2_outlined,
-                                  color: AppColors.blue,
-                                  title: 'Stock Management',
-                                  subtitle: 'Keep your inventory updated for better tracking.',
-                                ),
-                                const SizedBox(height: 100),
+                                _buildActionButton('Email Caregiver', Icons.email_outlined),
+                                const SizedBox(height: 12),
+                                _buildActionButton('Export CSV', Icons.file_download_outlined),
                               ],
                             );
                           },
@@ -83,24 +156,110 @@ class ReportsPage extends StatelessWidget {
     );
   }
 
+  Widget _buildReportTabs() {
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          _buildPeriodTab('This Week'),
+          _buildPeriodTab('This Month'),
+          _buildPeriodTab('Custom'),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPeriodTab(String period) {
+    final isSelected = _selectedPeriod == period;
+    return Expanded(
+      child: InkWell(
+        borderRadius: BorderRadius.circular(8),
+        onTap: () => _selectPeriod(period),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          decoration: BoxDecoration(
+            color: isSelected ? AppColors.blue : Colors.transparent,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Center(
+            child: Text(
+              period,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: isSelected ? Colors.white : AppColors.secondaryText,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildSummaryCard(int taken, int missed, int percentage) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: AppColors.blue,
+        color: AppColors.white,
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border),
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Overall Adherence', style: TextStyle(color: Colors.white70, fontSize: 16)),
-          const SizedBox(height: 8),
-          Text('$percentage%', style: const TextStyle(color: Colors.white, fontSize: 48, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 20),
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _buildStatColumn('Taken', taken.toString(), Colors.greenAccent),
-              _buildStatColumn('Missed', missed.toString(), Colors.orangeAccent),
+              const Text(
+                'Overall Adherence',
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.primaryText),
+              ),
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEBF9F0),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(Icons.check_circle, color: Color(0xFF1F9D68), size: 18),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                '$percentage%',
+                style: const TextStyle(
+                  fontSize: 42,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.primaryText,
+                ),
+              ),
+              const SizedBox(width: 6),
+              const Padding(
+                padding: EdgeInsets.only(bottom: 10),
+                child: Text(
+                  '+2% this week',
+                  style: TextStyle(fontSize: 12, color: Color(0xFF1F9D68), fontWeight: FontWeight.w600),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 18),
+          Row(
+            children: [
+              Expanded(
+                child: _buildMetricBox('Doses Taken', '$taken', true),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildMetricBox('Doses Missed', '$missed', false),
+              ),
             ],
           ),
         ],
@@ -108,38 +267,122 @@ class ReportsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildStatColumn(String label, String val, Color color) {
-    return Column(
+  Widget _buildMetricBox(String label, String value, bool taken) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: taken ? const Color(0xFFEAF7F1) : const Color(0xFFFCECEC),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(fontSize: 11, color: AppColors.secondaryText),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 26,
+              fontWeight: FontWeight.w700,
+              color: taken ? const Color(0xFF1F9D68) : const Color(0xFFDC2626),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSectionTitle(String title) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(val, style: TextStyle(color: color, fontSize: 20, fontWeight: FontWeight.bold)),
-        Text(label, style: const TextStyle(color: Colors.white60, fontSize: 12)),
+        Text(
+          title,
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.primaryText),
+        ),
+        const Icon(Icons.more_vert, size: 18, color: AppColors.secondaryText),
       ],
     );
   }
 
-  Widget _buildInsightTile({required IconData icon, required Color color, required String title, required String subtitle}) {
+  Widget _buildWeekStrip() {
+    final days = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+    final statuses = [true, true, false, true, false, false, true];
+
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.inputBorder),
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border),
       ),
       child: Row(
-        children: [
-          CircleAvatar(backgroundColor: color.withOpacity(0.1), child: Icon(icon, color: color)),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
-                Text(subtitle, style: const TextStyle(color: AppColors.subText, fontSize: 12)),
-              ],
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: List.generate(days.length, (index) {
+          final isDone = statuses[index];
+          return Column(
+            children: [
+              Text(
+                days[index],
+                style: const TextStyle(fontSize: 11, color: AppColors.secondaryText),
+              ),
+              const SizedBox(height: 10),
+              Container(
+                width: 26,
+                height: 26,
+                decoration: BoxDecoration(
+                  color: isDone ? const Color(0xFF1F9D68) : const Color(0xFFE2E8F0),
+                  shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: Icon(
+                    isDone ? Icons.check : Icons.close,
+                    size: 14,
+                    color: isDone ? Colors.white : AppColors.secondaryText,
+                  ),
+                ),
+              ),
+            ],
+          );
+        }),
+      ),
+    );
+  }
+
+  Widget _buildActionButton(String label, IconData icon) {
+    final isSelected = _selectedAction == label;
+
+    return Container(
+      height: 48,
+      decoration: BoxDecoration(
+        color: isSelected ? AppColors.blue : const Color(0xFFE5E7EB),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: () {
+          setState(() {
+            _selectedAction = label;
+          });
+        },
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 18, color: isSelected ? Colors.white : AppColors.primaryText),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                color: isSelected ? Colors.white : AppColors.primaryText,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
