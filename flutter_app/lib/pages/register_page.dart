@@ -22,7 +22,9 @@ class _RegisterPageState extends State<RegisterPage> {
   final TextEditingController _confirmPassCtrl = TextEditingController();
 
   Future<void> _register() async {
-    if (_nameCtrl.text.isEmpty || _emailCtrl.text.isEmpty || _passCtrl.text.isEmpty) {
+    if (_nameCtrl.text.isEmpty ||
+        _emailCtrl.text.isEmpty ||
+        _passCtrl.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please fill all fields')),
       );
@@ -37,7 +39,7 @@ class _RegisterPageState extends State<RegisterPage> {
     }
 
     setState(() => _isLoading = true);
-    
+
     try {
       final authService = Provider.of<AuthService>(context, listen: false);
       await authService.registerWithEmail(
@@ -46,20 +48,23 @@ class _RegisterPageState extends State<RegisterPage> {
         _nameCtrl.text.trim(),
         _userType,
       );
-      
+
       // After registration, sign out so they HAVE to log in manually as requested
       await authService.signOut();
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Registration successful! Please log in.')),
+          const SnackBar(
+              content: Text('Registration successful! Please log in.')),
         );
-        Navigator.pushReplacementNamed(context, '/login');
+        Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString().replaceAll(RegExp(r'\[.*?\]'), '').trim())),
+          SnackBar(
+              content:
+                  Text(e.toString().replaceAll(RegExp(r'\[.*?\]'), '').trim())),
         );
       }
     } finally {
@@ -82,12 +87,16 @@ class _RegisterPageState extends State<RegisterPage> {
                 children: [
                   const Text(
                     'Create Account',
-                    style: TextStyle(fontSize: 28, fontWeight: FontWeight.w900, color: AppColors.blue),
+                    style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.w900,
+                        color: AppColors.blue),
                   ),
                   const SizedBox(height: 8),
-                  const Text('Join MediTrack today', style: TextStyle(color: AppColors.subText)),
+                  const Text('Join MediTrack today',
+                      style: TextStyle(color: AppColors.subText)),
                   const SizedBox(height: 32),
-                  
+
                   // User Type Toggle
                   Container(
                     padding: const EdgeInsets.all(4),
@@ -104,9 +113,16 @@ class _RegisterPageState extends State<RegisterPage> {
                   ),
                   const SizedBox(height: 24),
 
-                  _buildInput(controller: _nameCtrl, hint: 'Full Name', icon: Icons.person_outline),
+                  _buildInput(
+                      controller: _nameCtrl,
+                      hint: 'Full Name',
+                      icon: Icons.person_outline),
                   const SizedBox(height: 16),
-                  _buildInput(controller: _emailCtrl, hint: 'Email Address', icon: Icons.email_outlined, keyboardType: TextInputType.emailAddress),
+                  _buildInput(
+                      controller: _emailCtrl,
+                      hint: 'Email Address',
+                      icon: Icons.email_outlined,
+                      keyboardType: TextInputType.emailAddress),
                   const SizedBox(height: 16),
                   _buildInput(
                     controller: _passCtrl,
@@ -114,8 +130,13 @@ class _RegisterPageState extends State<RegisterPage> {
                     icon: Icons.lock_outline,
                     obscureText: !_showPassword,
                     suffixIcon: IconButton(
-                      icon: Icon(_showPassword ? Icons.visibility_off : Icons.visibility, color: Colors.grey),
-                      onPressed: () => setState(() => _showPassword = !_showPassword),
+                      icon: Icon(
+                          _showPassword
+                              ? Icons.visibility_off
+                              : Icons.visibility,
+                          color: Colors.grey),
+                      onPressed: () =>
+                          setState(() => _showPassword = !_showPassword),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -125,11 +146,16 @@ class _RegisterPageState extends State<RegisterPage> {
                     icon: Icons.lock_reset_outlined,
                     obscureText: !_showConfirmPassword,
                     suffixIcon: IconButton(
-                      icon: Icon(_showConfirmPassword ? Icons.visibility_off : Icons.visibility, color: Colors.grey),
-                      onPressed: () => setState(() => _showConfirmPassword = !_showConfirmPassword),
+                      icon: Icon(
+                          _showConfirmPassword
+                              ? Icons.visibility_off
+                              : Icons.visibility,
+                          color: Colors.grey),
+                      onPressed: () => setState(
+                          () => _showConfirmPassword = !_showConfirmPassword),
                     ),
                   ),
-                  
+
                   const SizedBox(height: 32),
                   SizedBox(
                     width: double.infinity,
@@ -139,12 +165,15 @@ class _RegisterPageState extends State<RegisterPage> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.blue,
                         foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16)),
                         elevation: 0,
                       ),
-                      child: _isLoading 
-                        ? const CircularProgressIndicator(color: Colors.white) 
-                        : const Text('Register', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                      child: _isLoading
+                          ? const CircularProgressIndicator(color: Colors.white)
+                          : const Text('Register',
+                              style: TextStyle(
+                                  fontSize: 18, fontWeight: FontWeight.bold)),
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -154,10 +183,11 @@ class _RegisterPageState extends State<RegisterPage> {
                       const Text("Already have an account? "),
                       GestureDetector(
                         onTap: () => Navigator.pushNamed(context, '/login'),
-                        child: const Text(
-                          "Log In", 
-                          style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.blue, decoration: TextDecoration.underline)
-                        ),
+                        child: const Text("Log In",
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.blue,
+                                decoration: TextDecoration.underline)),
                       ),
                     ],
                   ),

@@ -28,20 +28,25 @@ class _LoginPageState extends State<LoginPage> {
     }
 
     setState(() => _isLoading = true);
-    
+
     try {
       final authService = Provider.of<AuthService>(context, listen: false);
       await authService.loginWithEmail(email, password);
-      // Navigation is automatically handled by AuthWrapper in main.dart
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, '/home');
+      }
     } catch (e) {
       if (mounted) {
         String message = e.toString();
         // Clean up common Firebase error messages for the user
-        if (message.contains('invalid-credential')) message = 'Invalid email or password';
-        if (message.contains('network-request-failed')) message = 'Check your internet connection';
-        
+        if (message.contains('invalid-credential'))
+          message = 'Invalid email or password';
+        if (message.contains('network-request-failed'))
+          message = 'Check your internet connection';
+
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message.replaceAll(RegExp(r'\[.*?\]'), '').trim())),
+          SnackBar(
+              content: Text(message.replaceAll(RegExp(r'\[.*?\]'), '').trim())),
         );
       }
     } finally {
@@ -94,7 +99,9 @@ class _LoginPageState extends State<LoginPage> {
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel')),
           ElevatedButton(
             onPressed: () async {
               final email = emailController.text.trim();
@@ -102,7 +109,9 @@ class _LoginPageState extends State<LoginPage> {
 
               if (email.isEmpty || password.length < 6) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Enter an email and a password with at least 6 characters')),
+                  const SnackBar(
+                      content: Text(
+                          'Enter an email and a password with at least 6 characters')),
                 );
                 return;
               }
@@ -120,13 +129,16 @@ class _LoginPageState extends State<LoginPage> {
                 if (context.mounted) {
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Reset link sent! Use it to finish setting your new password.')),
+                    const SnackBar(
+                        content: Text(
+                            'Reset link sent! Use it to finish setting your new password.')),
                   );
                 }
               } catch (e) {
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Error: Could not reset password')),
+                    const SnackBar(
+                        content: Text('Error: Could not reset password')),
                   );
                 }
               }
@@ -164,9 +176,13 @@ class _LoginPageState extends State<LoginPage> {
                   const SizedBox(height: 16),
                   const Text(
                     'MediTrack',
-                    style: TextStyle(fontSize: 32, fontWeight: FontWeight.w900, color: AppColors.blue),
+                    style: TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.w900,
+                        color: AppColors.blue),
                   ),
-                  const Text('Your Smart Medication Companion', style: TextStyle(color: AppColors.subText)),
+                  const Text('Your Smart Medication Companion',
+                      style: TextStyle(color: AppColors.subText)),
                   const SizedBox(height: 48),
                   _buildInput(
                     controller: _emailCtrl,
@@ -181,15 +197,23 @@ class _LoginPageState extends State<LoginPage> {
                     icon: Icons.lock_outline,
                     obscureText: !_showPassword,
                     suffixIcon: IconButton(
-                      icon: Icon(_showPassword ? Icons.visibility_off : Icons.visibility, color: Colors.grey),
-                      onPressed: () => setState(() => _showPassword = !_showPassword),
+                      icon: Icon(
+                          _showPassword
+                              ? Icons.visibility_off
+                              : Icons.visibility,
+                          color: Colors.grey),
+                      onPressed: () =>
+                          setState(() => _showPassword = !_showPassword),
                     ),
                   ),
                   Align(
                     alignment: Alignment.centerRight,
                     child: TextButton(
                       onPressed: _showForgotPassword,
-                      child: const Text('Forgot Password?', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.blue)),
+                      child: const Text('Forgot Password?',
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.blue)),
                     ),
                   ),
                   const SizedBox(height: 32),
@@ -201,12 +225,19 @@ class _LoginPageState extends State<LoginPage> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.blue,
                         foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16)),
                         elevation: 0,
                       ),
-                      child: _isLoading 
-                        ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 3))
-                        : const Text('Log In', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                      child: _isLoading
+                          ? const SizedBox(
+                              height: 24,
+                              width: 24,
+                              child: CircularProgressIndicator(
+                                  color: Colors.white, strokeWidth: 3))
+                          : const Text('Log In',
+                              style: TextStyle(
+                                  fontSize: 18, fontWeight: FontWeight.bold)),
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -216,10 +247,11 @@ class _LoginPageState extends State<LoginPage> {
                       const Text("New here? "),
                       GestureDetector(
                         onTap: () => Navigator.pushNamed(context, '/register'),
-                        child: const Text(
-                          "Create an account",
-                          style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.blue, decoration: TextDecoration.underline)
-                        ),
+                        child: const Text("Create an account",
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.blue,
+                                decoration: TextDecoration.underline)),
                       ),
                     ],
                   ),
