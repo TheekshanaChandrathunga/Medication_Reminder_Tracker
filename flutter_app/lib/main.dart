@@ -19,6 +19,7 @@ import 'pages/reports_page.dart';
 import 'services/auth_service.dart';
 import 'services/database_service.dart';
 import 'services/notification_service.dart';
+import 'services/report_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -60,6 +61,9 @@ class MediTrackApp extends StatelessWidget {
         ),
         Provider<DatabaseService>(
           create: (_) => DatabaseService(),
+        ),
+        Provider<ReportService>(
+          create: (_) => ReportService(),
         ),
       ],
       child: MaterialApp(
