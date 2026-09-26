@@ -18,6 +18,7 @@ import 'pages/history_page.dart';
 import 'pages/reports_page.dart';
 import 'services/auth_service.dart';
 import 'services/database_service.dart';
+import 'services/notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -42,6 +43,7 @@ void main() async {
   }
 
   await initializeDateFormatting('en_US', null);
+  await NotificationService.instance.initialize();
 
   runApp(const MediTrackApp());
 }

@@ -8,6 +8,7 @@ import '../constants.dart';
 import '../widgets/bottom_nav.dart';
 import '../services/auth_service.dart';
 import '../services/database_service.dart';
+import '../services/notification_service.dart';
 import '../models/medication_model.dart';
 
 class HomePage extends StatefulWidget {
@@ -171,6 +172,8 @@ class _HomePageState extends State<HomePage> {
                                   child: CircularProgressIndicator());
 
                             final medications = snapshot.data ?? [];
+                            NotificationService.instance
+                                .scheduleForMedications(medications);
                             final takenToday = medications
                                 .where((m) => _isTakenForCurrentDose(m))
                                 .length;
