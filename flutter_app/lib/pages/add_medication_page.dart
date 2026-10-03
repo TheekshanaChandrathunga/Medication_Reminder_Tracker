@@ -13,7 +13,8 @@ import '../services/database_service.dart';
 
 class AddMedicationPage extends StatefulWidget {
   final Medication? medication;
-  const AddMedicationPage({super.key, this.medication});
+  final String? ownerUserId;
+  const AddMedicationPage({super.key, this.medication, this.ownerUserId});
 
   @override
   State<AddMedicationPage> createState() => _AddMedicationPageState();
@@ -116,7 +117,7 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
     try {
       final authService = Provider.of<AuthService>(context, listen: false);
       final dbService = Provider.of<DatabaseService>(context, listen: false);
-      final userId = authService.currentUserId;
+      final userId = widget.ownerUserId ?? authService.currentUserId;
 
       if (userId == null) throw Exception("User not logged in");
 

@@ -21,7 +21,20 @@ class DatabaseService {
 
   Stream<List<Medication>> getMedications(String userId) {
     if (isSimulation) {
-      return Stream.value(const <Medication>[]);
+      if (userId == 'sim_patient_1') {
+        return Stream.value([
+          Medication(id: 'sim_metformin', userId: userId, name: 'Metformin', dosage: '500mg', category: 'Pill', frequency: 'Daily', doseTimes: ['8:00 AM'], startDate: '2023-10-24', takeWith: 'Take with food', totalQuantity: 30, refillAlertAt: 5),
+          Medication(id: 'sim_lisinopril', userId: userId, name: 'Lisinopril', dosage: '10mg', category: 'Pill', frequency: 'Daily', doseTimes: ['12:00 PM'], startDate: '2023-10-24', takeWith: 'After lunch', totalQuantity: 24, refillAlertAt: 5),
+          Medication(id: 'sim_atorvastatin', userId: userId, name: 'Atorvastatin', dosage: '20mg', category: 'Pill', frequency: 'Daily', doseTimes: ['6:00 PM'], startDate: '2023-10-24', takeWith: 'Before bed', totalQuantity: 24, refillAlertAt: 5),
+        ]);
+      }
+      return Stream.value([
+        Medication(
+          id: 'sim_1', userId: userId, name: 'Aspirin', dosage: '81mg',
+          category: 'Pill', frequency: 'Daily', doseTimes: ['08:00 AM'],
+          startDate: '2023-10-24', takeWith: 'With Food', totalQuantity: 24, refillAlertAt: 5
+        ),
+      ]);
     }
 
     return _db
@@ -106,27 +119,28 @@ class DatabaseService {
   // Get Adherence Logs
   Stream<List<Map<String, dynamic>>> getAdherenceLogs(String userId) {
     if (isSimulation) {
+      if (userId == 'sim_patient_1') {
+        return Stream.value([
+          for (var index = 0; index < 10; index++)
+            {'id': 'sim_taken_$index', 'userId': userId, 'medicationName': 'Medication', 'status': 'taken'},
+          {'id': 'sim_missed_1', 'userId': userId, 'medicationName': 'Metformin', 'status': 'missed'},
+        ]);
+      }
       return Stream.value([]);
     }
-
-    return _db
-        .collection('adherence_logs')
+    return _db.collection('adherence_logs')
         .where('userId', isEqualTo: userId)
         .snapshots()
         .map((snapshot) {
-      final logs = snapshot.docs.map((doc) => doc.data()).toList();
-
-      logs.sort((a, b) {
-        final tA = a['takenAt'] as Timestamp?;
-        final tB = b['takenAt'] as Timestamp?;
-
-        if (tA == null || tB == null) return 0;
-
-        return tB.compareTo(tA);
-      });
-
-      return logs;
-    });
+          final logs = snapshot.docs.map((doc) => {...doc.data(), 'id': doc.id}).toList();
+          logs.sort((a, b) {
+            final tA = a['takenAt'] as Timestamp?;
+            final tB = b['takenAt'] as Timestamp?;
+            if (tA == null || tB == null) return 0;
+            return tB.compareTo(tA);
+          });
+          return logs;
+        });
   }
 
   Future<void> refillMedication(String medId, int amount) async {
@@ -221,20 +235,83 @@ class DatabaseService {
   }
 
   Stream<Map<String, dynamic>?> getUserProfile(String userId) {
-    if (isSimulation) {
-      return Stream.value({
-        'name': 'Demo User',
-        'role': 'Patient',
-      });
-    }
+    if (isSimulation) return Stream.value({'name': 'Demo User', 'role': 'Caregiver'});
+    return _db.collection('users').doc(userId).snapshots().map((snap) => snap.data());
+  }
 
-    return _db
-        .collection('users')
-        .doc(userId)
+  Stream<List<Map<String, dynamic>>> getCaregiverPatients(String caregiverId) {
+    if (isSimulation) {
+      return Stream.value([
+        {'id': 'sim_patient_1', 'name': 'Kamala Perera', 'age': 'Age 72', 'relationship': 'Mother', 'adherence': 92, 'monitoringSince': 'Monitoring since Aug 2023', 'phone': '+94771234567'},
+        {'id': 'sim_patient_2', 'name': 'Saman Kumara', 'age': 'Age 65', 'relationship': 'Uncle', 'adherence': 86},
+      ]);
+    }
+    return _db.collection('caregiver_relationships')
+        .where('caregiver_id', isEqualTo: caregiverId)
         .snapshots()
-        .map(
-          (snap) => snap.data() as Map<String, dynamic>?,
-        );
+        .asyncMap((snapshot) async {
+          final patients = await Future.wait(snapshot.docs.map((relationship) async {
+            final patientId = relationship.data()['patient_id']?.toString();
+            if (patientId == null || patientId.isEmpty) return null;
+            final patient = await _db.collection('users').doc(patientId).get();
+            final data = patient.data();
+            if (!patient.exists || data == null) return null;
+            final details = relationship.data()['patient_details'];
+            return <String, dynamic>{
+              ...data,
+              if (details is Map) ...Map<String, dynamic>.from(details),
+              'id': patientId,
+              'relationship': relationship.data()['relationship'] ?? 'Patient',
+            };
+          }));
+          return patients.whereType<Map<String, dynamic>>().toList();
+        });
+  }
+
+  Future<void> linkCaregiverPatient(
+    String caregiverId,
+    String patientId,
+    String relationship, {
+    Map<String, dynamic> patientDetails = const {},
+  }) async {
+    if (isSimulation) return;
+    await _db.collection('caregiver_relationships').doc('${caregiverId}_$patientId').set({
+      'caregiver_id': caregiverId,
+      'patient_id': patientId,
+      'relationship': relationship,
+      'patient_details': patientDetails,
+      'created_at': FieldValue.serverTimestamp(),
+    });
+  }
+
+  Stream<List<Map<String, dynamic>>> getCaregiverNotes(String patientId) {
+    if (isSimulation) {
+      return Stream.value([
+        {'text': 'Felt slightly dizzy after morning medication yesterday. Will monitor today.', 'created_at': DateTime.now()},
+      ]);
+    }
+    return _db.collection('caregiver_notes')
+        .where('patient_id', isEqualTo: patientId)
+        .snapshots()
+        .map((snapshot) => snapshot.docs.map((doc) => doc.data()).toList());
+  }
+
+  Future<void> addCaregiverNote(String patientId, String caregiverId, String text) async {
+    if (isSimulation) return;
+    await _db.collection('caregiver_notes').add({
+      'patient_id': patientId,
+      'caregiver_id': caregiverId,
+      'text': text,
+      'created_at': FieldValue.serverTimestamp(),
+    });
+  }
+
+  Future<void> acknowledgeMissedDose(String logId) async {
+    if (isSimulation) return;
+    await _db.collection('adherence_logs').doc(logId).update({
+      'acknowledged': true,
+      'acknowledgedAt': FieldValue.serverTimestamp(),
+    });
   }
 
   void _ensureFirebaseAvailable() {

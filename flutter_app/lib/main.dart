@@ -6,11 +6,11 @@ import 'package:provider/provider.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 import 'constants.dart';
-import 'models/medication_model.dart';
 import 'pages/splash_page.dart';
 import 'pages/login_page.dart';
 import 'pages/register_page.dart';
 import 'pages/home_page.dart';
+import 'pages/caregiver_home_page.dart';
 import 'pages/meds_page.dart';
 import 'pages/add_medication_page.dart';
 import 'pages/profile_page.dart';
@@ -18,32 +18,21 @@ import 'pages/history_page.dart';
 import 'pages/reports_page.dart';
 import 'services/auth_service.dart';
 import 'services/database_service.dart';
-import 'services/notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // The browser demo is intentionally run without Firebase so it uses the app's
+  // built-in simulation data instead of failing Firestore permission checks.
   try {
-    if (Firebase.apps.isEmpty && kIsWeb) {
-      await Firebase.initializeApp(
-        options: const FirebaseOptions(
-          apiKey: "AIzaSyCBx1c79dUynrvHKIDZuWliVkkcNP0n9bg",
-          authDomain: "meditrack-3a657.firebaseapp.com",
-          projectId: "meditrack-3a657",
-          storageBucket: "meditrack-3a657.firebasestorage.app",
-          messagingSenderId: "468859237025",
-          appId: "1:468859237025:web:cf5f892827131d1f9bb6e0",
-        ),
-      );
-    } else if (Firebase.apps.isEmpty) {
+    if (!kIsWeb) {
       await Firebase.initializeApp();
     }
   } catch (e) {
-    debugPrint('Firebase initialization failed: $e');
+    debugPrint("Firebase initialization failed: $e");
   }
 
   await initializeDateFormatting('en_US', null);
-  await NotificationService.instance.initialize();
 
   runApp(const MediTrackApp());
 }
@@ -79,15 +68,10 @@ class MediTrackApp extends StatelessWidget {
           '/splash': (context) => const SplashPage(),
           '/login': (context) => const LoginPage(),
           '/register': (context) => const RegisterPage(),
-          '/home': (context) => const HomePage(),
+          '/home': (context) => const RoleHomePage(),
+          '/caregiverHome': (context) => const CaregiverHomePage(),
           '/meds': (context) => const MedsPage(),
-          '/addMed': (context) {
-            final args = ModalRoute.of(context)?.settings.arguments;
-            if (args is Medication) {
-              return AddMedicationPage(medication: args);
-            }
-            return const AddMedicationPage();
-          },
+          '/addMed': (context) => const AddMedicationPage(),
           '/profile': (context) => const ProfilePage(),
           '/history': (context) => const HistoryPage(),
           '/reports': (context) => const ReportsPage(),
@@ -104,10 +88,6 @@ class AuthWrapper extends StatelessWidget {
   Widget build(BuildContext context) {
     final authService = Provider.of<AuthService>(context);
 
-    if (DatabaseService.isSimulation) {
-      return const HomePage();
-    }
-
     return StreamBuilder<User?>(
       stream: authService.user,
       builder: (context, snapshot) {
@@ -116,10 +96,33 @@ class AuthWrapper extends StatelessWidget {
         }
 
         if (snapshot.hasData) {
-          return const HomePage();
+          return const RoleHomePage();
         }
 
         return const LoginPage();
+      },
+    );
+  }
+}
+
+class RoleHomePage extends StatelessWidget {
+  const RoleHomePage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    if (DatabaseService.isSimulation) return const CaregiverHomePage();
+
+    final authService = Provider.of<AuthService>(context, listen: false);
+    final dbService = Provider.of<DatabaseService>(context, listen: false);
+    final userId = authService.currentUserId;
+    if (userId == null) return const LoginPage();
+
+    return StreamBuilder<Map<String, dynamic>?>(
+      stream: dbService.getUserProfile(userId),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) return const SplashPage();
+        final role = snapshot.data?['role']?.toString().toLowerCase();
+        return role == 'caregiver' ? const CaregiverHomePage() : const HomePage();
       },
     );
   }

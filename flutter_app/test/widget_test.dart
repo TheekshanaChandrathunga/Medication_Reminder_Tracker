@@ -9,7 +9,11 @@ import 'package:meditrack/services/database_service.dart';
 void main() {
   testWidgets('App loads and displays title', (WidgetTester tester) async {
     await tester.pumpWidget(const MediTrackApp());
+    await tester.pumpAndSettle();
     expect(find.text('MediTrack'), findsWidgets);
+    expect(find.text('My Patients'), findsOneWidget);
+    expect(find.text('Kamala Perera'), findsWidgets);
+    expect(find.text('Weekly Adherence'), findsOneWidget);
   });
 
   testWidgets('Reports page shows adherence report actions', (WidgetTester tester) async {

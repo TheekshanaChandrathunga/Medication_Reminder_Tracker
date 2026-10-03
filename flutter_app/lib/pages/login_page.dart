@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../constants.dart';
 import '../services/auth_service.dart';
+import '../services/database_service.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -31,10 +32,20 @@ class _LoginPageState extends State<LoginPage> {
 
     try {
       final authService = Provider.of<AuthService>(context, listen: false);
+      final dbService = Provider.of<DatabaseService>(context, listen: false);
       await authService.loginWithEmail(email, password);
-      if (mounted) {
-        Navigator.pushReplacementNamed(context, '/home');
-      }
+
+      final userId = authService.currentUserId;
+      if (userId == null) throw StateError('Unable to load the signed-in account.');
+
+      final profile = await dbService.getUserProfile(userId).first;
+      if (!mounted) return;
+
+      final role = profile?['role']?.toString().trim().toLowerCase();
+      Navigator.pushReplacementNamed(
+        context,
+        role == 'caregiver' ? '/caregiverHome' : '/home',
+      );
     } catch (e) {
       if (mounted) {
         String message = e.toString();
