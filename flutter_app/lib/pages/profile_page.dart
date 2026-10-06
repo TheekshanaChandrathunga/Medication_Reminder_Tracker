@@ -76,7 +76,6 @@ class ProfilePage extends StatelessWidget {
   void _showEditProfile(BuildContext context, String userId, String currentName,
       String currentRole) {
     final nameController = TextEditingController(text: currentName);
-    String selectedRole = currentRole;
 
     showDialog(
       context: context,
@@ -91,15 +90,11 @@ class ProfilePage extends StatelessWidget {
                 decoration: const InputDecoration(
                     labelText: 'Full Name', border: OutlineInputBorder()),
               ),
-              const SizedBox(height: 16),
-              DropdownButtonFormField<String>(
-                value: selectedRole,
+              const SizedBox(height: 12),
+              InputDecorator(
                 decoration: const InputDecoration(
                     labelText: 'Role', border: OutlineInputBorder()),
-                onChanged: (val) => setDialogState(() => selectedRole = val!),
-                items: ['Patient', 'Caregiver']
-                    .map((r) => DropdownMenuItem(value: r, child: Text(r)))
-                    .toList(),
+                child: Text(currentRole),
               ),
             ],
           ),
@@ -110,8 +105,7 @@ class ProfilePage extends StatelessWidget {
             ElevatedButton(
               onPressed: () async {
                 final db = Provider.of<DatabaseService>(context, listen: false);
-                await db.updateProfile(
-                    userId, nameController.text.trim(), selectedRole);
+                await db.updateProfile(userId, nameController.text.trim());
                 if (context.mounted) Navigator.pop(context);
               },
               child: const Text('Save Changes'),
