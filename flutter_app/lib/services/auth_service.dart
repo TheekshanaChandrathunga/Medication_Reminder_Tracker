@@ -1,7 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'database_service.dart';
 
 class AuthService {
   // Check if Firebase is actually initialized without triggering [core/no-app]
@@ -28,12 +27,15 @@ class AuthService {
 
   Future<UserCredential?> loginWithEmail(String email, String password) async {
     if (isSimulation) return null;
-    return await _auth.signInWithEmailAndPassword(email: email, password: password);
+    return await _auth.signInWithEmailAndPassword(
+        email: email, password: password);
   }
 
-  Future<UserCredential?> registerWithEmail(String email, String password, String name, String userType) async {
+  Future<UserCredential?> registerWithEmail(
+      String email, String password, String name, String userType) async {
     if (isSimulation) return null;
-    UserCredential result = await _auth.createUserWithEmailAndPassword(email: email, password: password);
+    UserCredential result = await _auth.createUserWithEmailAndPassword(
+        email: email, password: password);
     if (result.user != null) {
       await _db.collection('users').doc(result.user!.uid).set({
         'uid': result.user!.uid,

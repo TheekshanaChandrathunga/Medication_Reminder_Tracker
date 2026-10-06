@@ -163,13 +163,15 @@ class _HomePageState extends State<HomePage> {
                           key: ValueKey(userId),
                           stream: dbService.getMedications(userId),
                           builder: (context, snapshot) {
-                            if (snapshot.hasError)
+                            if (snapshot.hasError) {
                               return Center(
                                   child: Text("Error: ${snapshot.error}"));
+                            }
                             if (snapshot.connectionState ==
-                                ConnectionState.waiting)
+                                ConnectionState.waiting) {
                               return const Center(
                                   child: CircularProgressIndicator());
+                            }
 
                             final medications = snapshot.data ?? [];
                             NotificationService.instance

@@ -3,12 +3,14 @@ import '../constants.dart';
 
 class BottomNav extends StatelessWidget {
   final String activeTab;
-  
-  const BottomNav({Key? key, required this.activeTab}) : super(key: key);
+  final bool caregiverMode;
+
+  const BottomNav(
+      {super.key, required this.activeTab, this.caregiverMode = false});
 
   void navigate(BuildContext context, String tab) {
     if (tab == activeTab) return;
-    
+
     switch (tab) {
       case 'Home':
         Navigator.pushReplacementNamed(context, '/home');
@@ -48,7 +50,8 @@ class BottomNav extends StatelessWidget {
     );
   }
 
-  Widget _buildNavItem(BuildContext context, String id, String icon, String label) {
+  Widget _buildNavItem(
+      BuildContext context, String id, String icon, String label) {
     bool isActive = activeTab == id;
     return Expanded(
       child: GestureDetector(

@@ -13,7 +13,9 @@ import '../services/database_service.dart';
 
 class AddMedicationPage extends StatefulWidget {
   final Medication? medication;
-  const AddMedicationPage({super.key, this.medication});
+  final String? ownerUserId;
+
+  const AddMedicationPage({super.key, this.medication, this.ownerUserId});
 
   @override
   State<AddMedicationPage> createState() => _AddMedicationPageState();
@@ -70,15 +72,17 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
   Future<void> _pickImage() async {
     if (kIsWeb) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Image picking is only supported on mobile devices.')),
+        const SnackBar(
+            content:
+                Text('Image picking is only supported on mobile devices.')),
       );
       return;
     }
-    
+
     final ImagePicker picker = ImagePicker();
     try {
       final XFile? pickedFile = await picker.pickImage(
-        source: ImageSource.gallery, 
+        source: ImageSource.gallery,
         maxWidth: 600,
       );
 
@@ -86,10 +90,10 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
         final Directory appDir = await getApplicationDocumentsDirectory();
         final String fileName = path.basename(pickedFile.path);
         final String localPath = path.join(appDir.path, fileName);
-        
+
         // Copy image to app's internal storage
         await File(pickedFile.path).copy(localPath);
-        
+
         setState(() {
           _localImagePath = localPath;
         });
@@ -116,7 +120,7 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
     try {
       final authService = Provider.of<AuthService>(context, listen: false);
       final dbService = Provider.of<DatabaseService>(context, listen: false);
-      final userId = authService.currentUserId;
+      final userId = widget.ownerUserId ?? authService.currentUserId;
 
       if (userId == null) throw Exception("User not logged in");
 
@@ -143,11 +147,14 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
       } else {
         await dbService.updateMedication(medication);
       }
-      
+
       if (mounted) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(widget.medication == null ? 'Medication added' : 'Medication updated')),
+          SnackBar(
+              content: Text(widget.medication == null
+                  ? 'Medication added'
+                  : 'Medication updated')),
         );
       }
     } catch (e) {
@@ -171,10 +178,12 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
         child: Column(
           children: [
             Container(
-              padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 12),
+              padding: const EdgeInsets.only(
+                  left: 16, right: 16, top: 16, bottom: 12),
               decoration: const BoxDecoration(
                 color: AppColors.white,
-                border: Border(bottom: BorderSide(color: AppColors.inputBorder)),
+                border:
+                    Border(bottom: BorderSide(color: AppColors.inputBorder)),
               ),
               child: Row(
                 children: [
@@ -184,13 +193,15 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
                   ),
                   const SizedBox(width: 12),
                   Text(
-                    isEditing ? 'Edit Medication' : 'Add Medication', 
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.blue),
+                    isEditing ? 'Edit Medication' : 'Add Medication',
+                    style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.blue),
                   ),
                 ],
               ),
             ),
-            
             Expanded(
               child: ListView(
                 padding: const EdgeInsets.all(16),
@@ -207,38 +218,37 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(color: AppColors.inputBorder),
                         ),
-                        child: _localImagePath != null && !kIsWeb && File(_localImagePath!).existsSync()
+                        child: _localImagePath != null &&
+                                !kIsWeb &&
+                                File(_localImagePath!).existsSync()
                             ? ClipRRect(
-                                borderRadius: BorderRadius.circular(16), 
-                                child: Image.file(File(_localImagePath!), fit: BoxFit.cover),
+                                borderRadius: BorderRadius.circular(16),
+                                child: Image.file(File(_localImagePath!),
+                                    fit: BoxFit.cover),
                               )
-                            : const Icon(Icons.add_a_photo_outlined, size: 40, color: Colors.grey),
+                            : const Icon(Icons.add_a_photo_outlined,
+                                size: 40, color: Colors.grey),
                       ),
                     ),
                   ),
                   const SizedBox(height: 20),
-                  
                   _buildSectionHeader('ℹ️', 'Basic Information'),
                   _buildLabel('Medication Name'),
-                  _buildInput(controller: _nameController, hint: 'e.g. Aspirin'),
-                  
+                  _buildInput(
+                      controller: _nameController, hint: 'e.g. Aspirin'),
                   _buildLabel('Dosage'),
                   _buildInput(controller: _dosageController, hint: 'e.g. 10mg'),
-
                   _buildLabel('Form / Category'),
                   _buildCategoryDropdown(),
-
                   const SizedBox(height: 12),
                   _buildSectionHeader('⏰', 'Schedule & Frequency'),
-                  
                   _buildLabel('How often?'),
-                  _buildGrid(['Daily', 'Weekly', 'Monthly', 'As Needed'], _frequency, (val) => setState(() => _frequency = val)),
-
+                  _buildGrid(['Daily', 'Weekly', 'Monthly', 'As Needed'],
+                      _frequency, (val) => setState(() => _frequency = val)),
                   _buildLabel('Dose Times'),
-                  ..._doseTimes.asMap().entries.map((entry) => _buildDoseTimeRow(entry.key, entry.value)),
-                  
+                  ..._doseTimes.asMap().entries.map(
+                      (entry) => _buildDoseTimeRow(entry.key, entry.value)),
                   _buildAddAnotherTime(),
-
                   Row(
                     children: [
                       Expanded(
@@ -246,7 +256,9 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             _buildLabel('Start Date'),
-                            _buildInput(controller: _startDateController, hint: 'mm/dd/yyyy'),
+                            _buildInput(
+                                controller: _startDateController,
+                                hint: 'mm/dd/yyyy'),
                           ],
                         ),
                       ),
@@ -256,22 +268,28 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             _buildLabel('End Date (Optional)'),
-                            _buildInput(controller: _endDateController, hint: 'mm/dd/yyyy'),
+                            _buildInput(
+                                controller: _endDateController,
+                                hint: 'mm/dd/yyyy'),
                           ],
                         ),
                       ),
                     ],
                   ),
-
                   const SizedBox(height: 12),
                   _buildSectionHeader('📋', 'Instructions & Inventory'),
-                  
                   _buildLabel('Take With'),
-                  _buildGrid(['Before Meal', 'With Meal', 'After Meal', 'Empty Stomach'], _takeWith, (val) => setState(() => _takeWith = val)),
-
+                  _buildGrid([
+                    'Before Meal',
+                    'With Meal',
+                    'After Meal',
+                    'Empty Stomach'
+                  ], _takeWith, (val) => setState(() => _takeWith = val)),
                   _buildLabel('Special Instructions'),
-                  _buildInput(controller: _instructionsController, hint: 'e.g. Take with plenty of water', maxLines: 3),
-
+                  _buildInput(
+                      controller: _instructionsController,
+                      hint: 'e.g. Take with plenty of water',
+                      maxLines: 3),
                   Row(
                     children: [
                       Expanded(
@@ -279,7 +297,10 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             _buildLabel('Total Quantity'),
-                            _buildInput(controller: _quantityController, hint: 'e.g. 30', keyboardType: TextInputType.number),
+                            _buildInput(
+                                controller: _quantityController,
+                                hint: 'e.g. 30',
+                                keyboardType: TextInputType.number),
                           ],
                         ),
                       ),
@@ -289,13 +310,15 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             _buildLabel('Remind to refill at'),
-                            _buildInput(controller: _refillController, hint: 'e.g. 5', keyboardType: TextInputType.number),
+                            _buildInput(
+                                controller: _refillController,
+                                hint: 'e.g. 5',
+                                keyboardType: TextInputType.number),
                           ],
                         ),
                       ),
                     ],
                   ),
-
                   const SizedBox(height: 24),
                   SizedBox(
                     width: double.infinity,
@@ -305,12 +328,18 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.blue,
                         foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16)),
                         elevation: 0,
                       ),
-                      child: _isLoading 
-                        ? const CircularProgressIndicator(color: Colors.white) 
-                        : Text(isEditing ? 'Update Medication' : 'Save Medication', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                      child: _isLoading
+                          ? const CircularProgressIndicator(color: Colors.white)
+                          : Text(
+                              isEditing
+                                  ? 'Update Medication'
+                                  : 'Save Medication',
+                              style: const TextStyle(
+                                  fontSize: 16, fontWeight: FontWeight.bold)),
                     ),
                   ),
                   const SizedBox(height: 40),
@@ -336,7 +365,8 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
           value: _category,
           isExpanded: true,
           onChanged: (val) => setState(() => _category = val!),
-          items: ['Pill', 'Capsule', 'Liquid', 'Injection', 'Other'].map((String value) {
+          items: ['Pill', 'Capsule', 'Liquid', 'Injection', 'Other']
+              .map((String value) {
             return DropdownMenuItem<String>(value: value, child: Text(value));
           }).toList(),
         ),
@@ -352,16 +382,19 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
           Expanded(
             child: InkWell(
               onTap: () async {
-                TimeOfDay? picked = await showTimePicker(context: context, initialTime: TimeOfDay.now());
+                TimeOfDay? picked = await showTimePicker(
+                    context: context, initialTime: TimeOfDay.now());
                 if (picked != null && mounted) {
                   final now = DateTime.now();
-                  final dt = DateTime(now.year, now.month, now.day, picked.hour, picked.minute);
+                  final dt = DateTime(
+                      now.year, now.month, now.day, picked.hour, picked.minute);
                   final formattedTime = DateFormat('hh:mm a').format(dt);
                   setState(() => _doseTimes[idx] = formattedTime);
                 }
               },
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(10),
@@ -374,7 +407,11 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
           const SizedBox(width: 8),
           IconButton(
             icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
-            onPressed: () { if (_doseTimes.length > 1) setState(() => _doseTimes.removeAt(idx)); },
+            onPressed: () {
+              if (_doseTimes.length > 1) {
+                setState(() => _doseTimes.removeAt(idx));
+              }
+            },
           ),
         ],
       ),
@@ -386,7 +423,11 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: GestureDetector(
         onTap: () => setState(() => _doseTimes.add('08:00 AM')),
-        child: const Text('+ Add another time', style: TextStyle(fontSize: 14, color: Color(0xFF006A60), fontWeight: FontWeight.bold)),
+        child: const Text('+ Add another time',
+            style: TextStyle(
+                fontSize: 14,
+                color: Color(0xFF006A60),
+                fontWeight: FontWeight.bold)),
       ),
     );
   }
@@ -398,7 +439,11 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
         children: [
           Text(icon, style: const TextStyle(fontSize: 18)),
           const SizedBox(width: 8),
-          Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.blue)),
+          Text(title,
+              style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.blue)),
         ],
       ),
     );
@@ -407,11 +452,19 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
   Widget _buildLabel(String text) {
     return Padding(
       padding: const EdgeInsets.only(top: 8, bottom: 6),
-      child: Text(text, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.secondaryText)),
+      child: Text(text,
+          style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: AppColors.secondaryText)),
     );
   }
 
-  Widget _buildInput({required TextEditingController controller, required String hint, TextInputType? keyboardType, int maxLines = 1}) {
+  Widget _buildInput(
+      {required TextEditingController controller,
+      required String hint,
+      TextInputType? keyboardType,
+      int maxLines = 1}) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -425,13 +478,15 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
         decoration: InputDecoration(
           hintText: hint,
           border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
         ),
       ),
     );
   }
 
-  Widget _buildGrid(List<String> items, String selected, Function(String) onSelect) {
+  Widget _buildGrid(
+      List<String> items, String selected, Function(String) onSelect) {
     return Wrap(
       spacing: 8,
       runSpacing: 8,
@@ -442,7 +497,9 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
           selected: isSelected,
           onSelected: (s) => onSelect(i),
           selectedColor: AppColors.blue,
-          labelStyle: TextStyle(color: isSelected ? Colors.white : Colors.black87, fontWeight: FontWeight.bold),
+          labelStyle: TextStyle(
+              color: isSelected ? Colors.white : Colors.black87,
+              fontWeight: FontWeight.bold),
           backgroundColor: Colors.white,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         );

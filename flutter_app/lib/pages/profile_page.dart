@@ -162,13 +162,15 @@ class ProfilePage extends StatelessWidget {
                       : StreamBuilder<Map<String, dynamic>?>(
                           stream: dbService.getUserProfile(userId),
                           builder: (context, snapshot) {
-                            if (snapshot.hasError)
+                            if (snapshot.hasError) {
                               return Center(
                                   child: Text("Error: ${snapshot.error}"));
+                            }
                             if (snapshot.connectionState ==
-                                ConnectionState.waiting)
+                                ConnectionState.waiting) {
                               return const Center(
                                   child: CircularProgressIndicator());
+                            }
 
                             final data = snapshot.data ?? {};
                             final name = data['name'] ?? 'User';
