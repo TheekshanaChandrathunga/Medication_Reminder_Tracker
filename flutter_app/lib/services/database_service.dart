@@ -114,7 +114,12 @@ class DatabaseService {
         .where('userId', isEqualTo: userId)
         .snapshots()
         .map((snapshot) {
-      final logs = snapshot.docs.map((doc) => doc.data()).toList();
+      final logs = snapshot.docs
+          .map((doc) => {
+                ...doc.data(),
+                'id': doc.id,
+              })
+          .toList();
 
       logs.sort((a, b) {
         final tA = a['takenAt'] as Timestamp?;
@@ -141,6 +146,86 @@ class DatabaseService {
     _ensureFirebaseAvailable();
 
     await _db.collection('medications').doc(medId).delete();
+  }
+
+  Stream<List<Map<String, dynamic>>> getCaregiverPatients(String caregiverId) {
+    if (isSimulation) {
+      return Stream.value(const <Map<String, dynamic>>[]);
+    }
+
+    return _db
+        .collection('caregiver_relationships')
+        .where('caregiverId', isEqualTo: caregiverId)
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map((doc) {
+              final data = doc.data();
+              return {
+                ...data,
+                'id': data['patientId']?.toString() ?? '',
+              };
+            })
+            .where((patient) => (patient['id'] as String).isNotEmpty)
+            .toList());
+  }
+
+  Future<void> linkCaregiverPatient(
+    String caregiverId,
+    String patientId,
+    String relationship, {
+    Map<String, dynamic>? patientDetails,
+  }) async {
+    _ensureFirebaseAvailable();
+
+    final linkId = '${caregiverId}_$patientId';
+    await _db.collection('caregiver_relationships').doc(linkId).set({
+      'caregiverId': caregiverId,
+      'patientId': patientId,
+      'relationship': relationship,
+      ...?patientDetails,
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+  }
+
+  Stream<List<Map<String, dynamic>>> getCaregiverNotes(String patientId) {
+    if (isSimulation) {
+      return Stream.value(const <Map<String, dynamic>>[]);
+    }
+
+    return _db
+        .collection('caregiver_notes')
+        .where('patientId', isEqualTo: patientId)
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map((doc) => {
+                  ...doc.data(),
+                  'id': doc.id,
+                })
+            .toList());
+  }
+
+  Future<void> addCaregiverNote(
+    String patientId,
+    String caregiverId,
+    String text,
+  ) async {
+    _ensureFirebaseAvailable();
+
+    await _db.collection('caregiver_notes').add({
+      'patientId': patientId,
+      'caregiverId': caregiverId,
+      'text': text,
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  Future<void> acknowledgeMissedDose(String logId) async {
+    _ensureFirebaseAvailable();
+
+    await _db.collection('adherence_logs').doc(logId).update({
+      'acknowledged': true,
+      'acknowledgedAt': FieldValue.serverTimestamp(),
+    });
   }
 
   Future<void> updateMedication(Medication medication) async {
@@ -228,12 +313,8 @@ class DatabaseService {
       });
     }
 
-    return _db
-        .collection('users')
-        .doc(userId)
-        .snapshots()
-        .map(
-          (snap) => snap.data() as Map<String, dynamic>?,
+    return _db.collection('users').doc(userId).snapshots().map(
+          (snap) => snap.data(),
         );
   }
 

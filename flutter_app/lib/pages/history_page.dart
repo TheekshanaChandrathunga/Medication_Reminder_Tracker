@@ -25,18 +25,26 @@ class HistoryPage extends StatelessWidget {
               children: [
                 // Header
                 Container(
-                  padding: const EdgeInsets.only(left: 20, right: 20, top: 16, bottom: 10),
+                  padding: const EdgeInsets.only(
+                      left: 20, right: 20, top: 16, bottom: 10),
                   color: AppColors.white,
                   child: Row(
                     children: [
                       Container(
-                        width: 32, height: 32,
-                        decoration: const BoxDecoration(color: Color(0xFFE2E8F0), shape: BoxShape.circle),
+                        width: 32,
+                        height: 32,
+                        decoration: const BoxDecoration(
+                            color: Color(0xFFE2E8F0), shape: BoxShape.circle),
                         alignment: Alignment.center,
                         margin: const EdgeInsets.only(right: 8),
-                        child: const Icon(Icons.history_rounded, size: 18, color: AppColors.blue),
+                        child: const Icon(Icons.history_rounded,
+                            size: 18, color: AppColors.blue),
                       ),
-                      const Text('Adherence History', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.blue)),
+                      const Text('Adherence History',
+                          style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.blue)),
                     ],
                   ),
                 ),
@@ -48,42 +56,54 @@ class HistoryPage extends StatelessWidget {
                       : StreamBuilder<List<Map<String, dynamic>>>(
                           stream: dbService.getAdherenceLogs(userId),
                           builder: (context, snapshot) {
-                            if (snapshot.hasError) return Center(child: Text("Error: ${snapshot.error}"));
-                            if (snapshot.connectionState == ConnectionState.waiting) {
-                              return const Center(child: CircularProgressIndicator());
+                            if (snapshot.hasError) {
+                              return Center(
+                                  child: Text("Error: ${snapshot.error}"));
                             }
-                            
+                            if (snapshot.connectionState ==
+                                ConnectionState.waiting) {
+                              return const Center(
+                                  child: CircularProgressIndicator());
+                            }
+
                             final logs = snapshot.data ?? [];
-                            
+
                             if (logs.isEmpty) {
                               return Center(
                                 child: Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    Icon(Icons.history, size: 64, color: Colors.grey.shade300),
+                                    Icon(Icons.history,
+                                        size: 64, color: Colors.grey.shade300),
                                     const SizedBox(height: 16),
-                                    const Text("No history recorded yet.", style: TextStyle(color: AppColors.subText)),
+                                    const Text("No history recorded yet.",
+                                        style: TextStyle(
+                                            color: AppColors.subText)),
                                   ],
                                 ),
                               );
                             }
 
                             return ListView.builder(
-                              padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
+                              padding:
+                                  const EdgeInsets.fromLTRB(16, 16, 16, 100),
                               itemCount: logs.length,
                               itemBuilder: (context, index) {
                                 final log = logs[index];
                                 final dynamic rawTimestamp = log['takenAt'];
                                 final String status = log['status'] ?? 'taken';
                                 final bool isTaken = status == 'taken';
-                                
+
                                 String dateStr = 'Unknown date';
                                 String timeStr = '';
-                                
+
                                 if (rawTimestamp is Timestamp) {
-                                  final DateTime takenAt = rawTimestamp.toDate();
-                                  dateStr = DateFormat('MMM dd, yyyy').format(takenAt);
-                                  timeStr = DateFormat('hh:mm a').format(takenAt);
+                                  final DateTime takenAt =
+                                      rawTimestamp.toDate();
+                                  dateStr = DateFormat('MMM dd, yyyy')
+                                      .format(takenAt);
+                                  timeStr =
+                                      DateFormat('hh:mm a').format(takenAt);
                                 }
 
                                 return Container(
@@ -92,10 +112,12 @@ class HistoryPage extends StatelessWidget {
                                   decoration: BoxDecoration(
                                     color: AppColors.white,
                                     borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(color: AppColors.inputBorder),
+                                    border: Border.all(
+                                        color: AppColors.inputBorder),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: Colors.black.withOpacity(0.02),
+                                        color: Colors.black
+                                            .withValues(alpha: 0.02),
                                         blurRadius: 4,
                                         offset: const Offset(0, 2),
                                       ),
@@ -104,22 +126,31 @@ class HistoryPage extends StatelessWidget {
                                   child: Row(
                                     children: [
                                       Icon(
-                                        isTaken ? Icons.check_circle : Icons.cancel, 
-                                        color: isTaken ? const Color(0xFF38A169) : Colors.redAccent, 
-                                        size: 28
-                                      ),
+                                          isTaken
+                                              ? Icons.check_circle
+                                              : Icons.cancel,
+                                          color: isTaken
+                                              ? const Color(0xFF38A169)
+                                              : Colors.redAccent,
+                                          size: 28),
                                       const SizedBox(width: 12),
                                       Expanded(
                                         child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
                                           children: [
                                             Text(
-                                              log['medicationName'] ?? 'Unknown Medication',
-                                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                                              log['medicationName'] ??
+                                                  'Unknown Medication',
+                                              style: const TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 15),
                                             ),
                                             Text(
                                               '${isTaken ? 'Taken' : 'Missed'} on $dateStr at $timeStr',
-                                              style: const TextStyle(color: AppColors.subText, fontSize: 12),
+                                              style: const TextStyle(
+                                                  color: AppColors.subText,
+                                                  fontSize: 12),
                                             ),
                                           ],
                                         ),
@@ -134,7 +165,11 @@ class HistoryPage extends StatelessWidget {
                 ),
               ],
             ),
-            const Positioned(bottom: 0, left: 0, right: 0, child: BottomNav(activeTab: 'History')),
+            const Positioned(
+                bottom: 0,
+                left: 0,
+                right: 0,
+                child: BottomNav(activeTab: 'History')),
           ],
         ),
       ),

@@ -39,10 +39,12 @@ class _LoginPageState extends State<LoginPage> {
       if (mounted) {
         String message = e.toString();
         // Clean up common Firebase error messages for the user
-        if (message.contains('invalid-credential'))
+        if (message.contains('invalid-credential')) {
           message = 'Invalid email or password';
-        if (message.contains('network-request-failed'))
+        }
+        if (message.contains('network-request-failed')) {
           message = 'Check your internet connection';
+        }
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
