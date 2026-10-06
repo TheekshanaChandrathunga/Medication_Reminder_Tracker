@@ -16,6 +16,8 @@ class MedicationReport {
     required this.endDate,
     required this.medications,
     required this.logs,
+    required this.allLogs,
+    required this.patientProfile,
     required this.csvBytes,
     required this.pdfBytes,
   });
@@ -24,6 +26,8 @@ class MedicationReport {
   final DateTime endDate;
   final List<Medication> medications;
   final List<Map<String, dynamic>> logs;
+  final List<Map<String, dynamic>> allLogs;
+  final Map<String, dynamic> patientProfile;
   final Uint8List csvBytes;
   final Uint8List pdfBytes;
 
@@ -79,12 +83,21 @@ class ReportService {
         .docs
         .map((doc) => Medication.fromMap(doc.data(), doc.id))
         .toList();
-    final logs = results[1].docs.map((doc) => doc.data()).where((log) {
-      final date = _logDate(log);
-      return date != null && !date.isBefore(start) && !date.isAfter(end);
-    }).toList()
+    final allLogs = results[1]
+        .docs
+        .map((doc) => {
+              ...doc.data(),
+              'id': doc.id,
+            })
+        .toList()
       ..sort((a, b) =>
           (_logDate(b) ?? DateTime(0)).compareTo(_logDate(a) ?? DateTime(0)));
+    final logs = allLogs.where((log) {
+      final date = _logDate(log);
+      return date != null && !date.isBefore(start) && !date.isAfter(end);
+    }).toList();
+    final patientProfile =
+        (await _firestore.collection('users').doc(userId).get()).data() ?? {};
 
     final csvBytes =
         Uint8List.fromList(utf8.encode(_buildCsv(medications, logs)));
@@ -93,6 +106,8 @@ class ReportService {
       endDate: end,
       medications: medications,
       logs: logs,
+      allLogs: allLogs,
+      patientProfile: patientProfile,
       csvBytes: csvBytes,
       pdfBytes: Uint8List(0),
     );
@@ -102,6 +117,8 @@ class ReportService {
       endDate: report.endDate,
       medications: report.medications,
       logs: report.logs,
+      allLogs: report.allLogs,
+      patientProfile: report.patientProfile,
       csvBytes: report.csvBytes,
       pdfBytes: await _buildPdf(report),
     );
@@ -193,6 +210,14 @@ class ReportService {
           pw.Text(
               'Period: ${_formatDate(report.startDate)} - ${_formatDate(report.endDate)}'),
           pw.SizedBox(height: 12),
+          pw.Text('Patient information',
+              style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+          pw.SizedBox(height: 6),
+          pw.TableHelper.fromTextArray(
+            headers: ['Field', 'Value'],
+            data: _patientProfileRows(report.patientProfile),
+          ),
+          pw.SizedBox(height: 12),
           pw.TableHelper.fromTextArray(
             headers: ['Metric', 'Value'],
             data: [
@@ -207,18 +232,85 @@ class ReportService {
           pw.SizedBox(height: 6),
           pw.TableHelper.fromTextArray(
             headers: ['Medication', 'Status', 'Recorded at'],
-            data: report.logs
-                .map((log) => [
-                      log['medicationName']?.toString() ?? 'Unknown',
-                      log['status']?.toString() ?? 'Unknown',
-                      _logDate(log)?.toIso8601String() ?? 'Unknown',
-                    ])
-                .toList(),
+            data: report.logs.isEmpty
+                ? [
+                    ['No events in selected period', '', '']
+                  ]
+                : report.logs
+                    .map((log) => [
+                          log['medicationName']?.toString() ?? 'Unknown',
+                          log['status']?.toString() ?? 'Unknown',
+                          _logDate(log)?.toIso8601String() ?? 'Unknown',
+                        ])
+                    .toList(),
+          ),
+          pw.SizedBox(height: 18),
+          pw.Text('Complete medication history',
+              style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+          pw.SizedBox(height: 6),
+          pw.TableHelper.fromTextArray(
+            headers: ['Medication', 'Status', 'Recorded at'],
+            data: report.allLogs.isEmpty
+                ? [
+                    ['No medication history available', '', '']
+                  ]
+                : report.allLogs
+                    .map((log) => [
+                          log['medicationName']?.toString() ?? 'Unknown',
+                          log['status']?.toString() ?? 'Unknown',
+                          _logDate(log)?.toIso8601String() ?? 'Unknown',
+                        ])
+                    .toList(),
+          ),
+          pw.SizedBox(height: 18),
+          pw.Text('Current medications',
+              style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+          pw.SizedBox(height: 6),
+          pw.TableHelper.fromTextArray(
+            headers: ['Medication', 'Dosage', 'Frequency', 'Schedule'],
+            data: report.medications.isEmpty
+                ? [
+                    ['No current medications', '', '', '']
+                  ]
+                : report.medications
+                    .map((medication) => [
+                          medication.name,
+                          medication.dosage,
+                          medication.frequency,
+                          medication.doseTimes.join(', '),
+                        ])
+                    .toList(),
           ),
         ],
       ),
     );
     return document.save();
+  }
+
+  List<List<String>> _patientProfileRows(Map<String, dynamic> profile) {
+    const fields = [
+      ('name', 'Name'),
+      ('email', 'Email'),
+      ('phone', 'Phone'),
+      ('age', 'Age'),
+      ('gender', 'Gender'),
+      ('address', 'Address'),
+      ('medicalConditions', 'Medical conditions'),
+      ('allergies', 'Allergies'),
+      ('emergencyContactName', 'Emergency contact'),
+      ('emergencyContactPhone', 'Emergency phone'),
+    ];
+
+    final rows = fields
+        .where(
+            (field) => profile[field.$1]?.toString().trim().isNotEmpty == true)
+        .map((field) => [field.$2, profile[field.$1].toString()])
+        .toList();
+    return rows.isEmpty
+        ? [
+            ['No patient information available', '']
+          ]
+        : rows;
   }
 
   String _formatDate(DateTime date) =>
