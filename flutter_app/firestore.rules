@@ -10,17 +10,30 @@ service cloud.firestore {
       return signedIn() && resource.data.userId == request.auth.uid;
     }
 
+    function isCaregiver() {
+      return signedIn()
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Caregiver';
+    }
+
+    function caresFor(patientId) {
+      return isCaregiver()
+        && get(/databases/$(database)/documents/caregiver_relationships/$(request.auth.uid + '_' + patientId)).data.caregiverId == request.auth.uid;
+    }
+
     match /medications/{medicationId} {
       allow create: if signedIn() && request.resource.data.userId == request.auth.uid;
-      allow read, delete: if owns(resource);
-      allow update: if owns(resource)
-        && request.resource.data.userId == request.auth.uid;
+      allow read, delete: if owns(resource) || caresFor(resource.data.userId);
+      allow update: if (owns(resource) || caresFor(resource.data.userId))
+        && request.resource.data.userId == resource.data.userId;
     }
 
     match /adherence_logs/{logId} {
       allow create: if signedIn() && request.resource.data.userId == request.auth.uid;
-      allow read: if owns(resource);
-      allow update, delete: if false;
+      allow read: if owns(resource) || caresFor(resource.data.userId);
+      allow update: if caresFor(resource.data.userId)
+        && request.resource.data.userId == resource.data.userId
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['acknowledged', 'acknowledgedAt']);
+      allow delete: if false;
     }
 
     match /reports/{reportId} {
@@ -30,7 +43,31 @@ service cloud.firestore {
     }
 
     match /users/{userId} {
-      allow read, write: if signedIn() && request.auth.uid == userId;
+      allow read: if signedIn() && (request.auth.uid == userId || caresFor(userId));
+      allow create: if signedIn()
+        && request.auth.uid == userId
+        && request.resource.data.role in ['Patient', 'Caregiver'];
+      allow update: if signedIn()
+        && request.auth.uid == userId
+        && request.resource.data.role == resource.data.role;
+    }
+
+    match /caregiver_relationships/{relationshipId} {
+      allow read: if signedIn()
+        && (resource.data.caregiverId == request.auth.uid || resource.data.patientId == request.auth.uid);
+      allow create, update: if isCaregiver()
+        && request.resource.data.caregiverId == request.auth.uid
+        && request.resource.data.patientId is string
+        && exists(/databases/$(database)/documents/users/$(request.resource.data.patientId));
+      allow delete: if isCaregiver() && resource.data.caregiverId == request.auth.uid;
+    }
+
+    match /caregiver_notes/{noteId} {
+      allow read: if caresFor(resource.data.patientId);
+      allow create: if isCaregiver()
+        && request.resource.data.caregiverId == request.auth.uid
+        && caresFor(request.resource.data.patientId);
+      allow update, delete: if false;
     }
   }
 }

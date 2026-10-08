@@ -16,6 +16,7 @@ import 'pages/add_medication_page.dart';
 import 'pages/profile_page.dart';
 import 'pages/history_page.dart';
 import 'pages/reports_page.dart';
+import 'pages/caregiver_home_page.dart';
 import 'services/auth_service.dart';
 import 'services/database_service.dart';
 import 'services/notification_service.dart';
@@ -95,6 +96,7 @@ class MediTrackApp extends StatelessWidget {
           '/profile': (context) => const ProfilePage(),
           '/history': (context) => const HistoryPage(),
           '/reports': (context) => const ReportsPage(),
+          '/caregiver': (context) => const CaregiverHomePage(),
         },
       ),
     );
@@ -120,7 +122,22 @@ class AuthWrapper extends StatelessWidget {
         }
 
         if (snapshot.hasData) {
-          return const HomePage();
+          return StreamBuilder<Map<String, dynamic>?>(
+            stream: context.read<DatabaseService>().getUserProfile(
+                  snapshot.data!.uid,
+                ),
+            builder: (context, profileSnapshot) {
+              if (profileSnapshot.connectionState == ConnectionState.waiting) {
+                return const SplashPage();
+              }
+
+              final role =
+                  profileSnapshot.data?['role']?.toString().toLowerCase();
+              return role == 'caregiver'
+                  ? const CaregiverHomePage()
+                  : const HomePage();
+            },
+          );
         }
 
         return const LoginPage();

@@ -13,7 +13,10 @@ class BottomNav extends StatelessWidget {
 
     switch (tab) {
       case 'Home':
-        Navigator.pushReplacementNamed(context, '/home');
+        Navigator.pushReplacementNamed(
+          context,
+          caregiverMode ? '/caregiver' : '/home',
+        );
         break;
       case 'Meds':
         Navigator.pushReplacementNamed(context, '/meds');

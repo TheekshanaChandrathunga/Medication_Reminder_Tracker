@@ -157,16 +157,24 @@ class DatabaseService {
         .collection('caregiver_relationships')
         .where('caregiverId', isEqualTo: caregiverId)
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) {
-              final data = doc.data();
-              return {
-                ...data,
-                'id': data['patientId']?.toString() ?? '',
-              };
-            })
-            .where((patient) => (patient['id'] as String).isNotEmpty)
-            .toList());
+        .asyncMap((snapshot) async {
+      final patients = await Future.wait(snapshot.docs.map((doc) async {
+        final relationship = doc.data();
+        final patientId = relationship['patientId']?.toString() ?? '';
+        if (patientId.isEmpty) return <String, dynamic>{};
+
+        final profile = await _db.collection('users').doc(patientId).get();
+        return {
+          ...relationship,
+          ...?profile.data(),
+          'id': patientId,
+        };
+      }));
+
+      return patients
+          .where((patient) => (patient['id'] as String?)?.isNotEmpty == true)
+          .toList();
+    });
   }
 
   Future<void> linkCaregiverPatient(
@@ -177,12 +185,19 @@ class DatabaseService {
   }) async {
     _ensureFirebaseAvailable();
 
+    final patient = await _db.collection('users').doc(patientId).get();
+    if (!patient.exists) {
+      throw StateError('No patient account exists for this ID');
+    }
+
     final linkId = '${caregiverId}_$patientId';
     await _db.collection('caregiver_relationships').doc(linkId).set({
       'caregiverId': caregiverId,
       'patientId': patientId,
       'relationship': relationship,
+      ...?patient.data(),
       ...?patientDetails,
+      'monitoringSince': FieldValue.serverTimestamp(),
       'updatedAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
   }
@@ -246,14 +261,12 @@ class DatabaseService {
   Future<void> updateProfile(
     String userId,
     String name,
-    String role,
   ) async {
     _ensureFirebaseAvailable();
 
     await _db.collection('users').doc(userId).set(
       {
         'name': name,
-        'role': role,
         'updatedAt': FieldValue.serverTimestamp(),
       },
       SetOptions(merge: true),
