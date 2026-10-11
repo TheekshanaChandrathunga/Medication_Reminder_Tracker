@@ -19,16 +19,31 @@ class BottomNav extends StatelessWidget {
         );
         break;
       case 'Meds':
-        Navigator.pushReplacementNamed(context, '/meds');
+        Navigator.pushReplacementNamed(
+          context,
+          caregiverMode ? '/caregiver-patients' : '/meds',
+        );
         break;
       case 'History':
-        Navigator.pushReplacementNamed(context, '/history');
+        Navigator.pushReplacementNamed(
+          context,
+          '/history',
+          arguments: caregiverMode,
+        );
         break;
       case 'Reports':
-        Navigator.pushReplacementNamed(context, '/reports');
+        Navigator.pushReplacementNamed(
+          context,
+          '/reports',
+          arguments: caregiverMode,
+        );
         break;
       case 'Profile':
-        Navigator.pushReplacementNamed(context, '/profile');
+        Navigator.pushReplacementNamed(
+          context,
+          '/profile',
+          arguments: caregiverMode,
+        );
         break;
     }
   }

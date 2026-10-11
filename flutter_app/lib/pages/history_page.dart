@@ -7,8 +7,17 @@ import '../widgets/bottom_nav.dart';
 import '../services/auth_service.dart';
 import '../services/database_service.dart';
 
-class HistoryPage extends StatelessWidget {
-  const HistoryPage({super.key});
+class HistoryPage extends StatefulWidget {
+  const HistoryPage({super.key, this.caregiverMode = false});
+
+  final bool caregiverMode;
+
+  @override
+  State<HistoryPage> createState() => _HistoryPageState();
+}
+
+class _HistoryPageState extends State<HistoryPage> {
+  String? _selectedPatientId;
 
   @override
   Widget build(BuildContext context) {
@@ -53,8 +62,102 @@ class HistoryPage extends StatelessWidget {
                 Expanded(
                   child: userId == null
                       ? const Center(child: Text("Please login to see history"))
-                      : StreamBuilder<List<Map<String, dynamic>>>(
-                          stream: dbService.getAdherenceLogs(userId),
+                      : widget.caregiverMode
+                          ? _buildCaregiverHistory(context, dbService, userId)
+                          : _buildHistoryLogs(dbService, userId),
+                ),
+              ],
+            ),
+            Positioned(
+                bottom: 0,
+                left: 0,
+                right: 0,
+                child: BottomNav(
+                  activeTab: 'History',
+                  caregiverMode: widget.caregiverMode,
+                )),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCaregiverHistory(
+    BuildContext context,
+    DatabaseService dbService,
+    String caregiverId,
+  ) {
+    return StreamBuilder<List<Map<String, dynamic>>>(
+      stream: dbService.getCaregiverPatients(caregiverId),
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return Center(child: Text('Error: ${snapshot.error}'));
+        }
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        final patients = snapshot.data ?? [];
+        if (patients.isEmpty) {
+          return const Center(child: Text('No patients linked yet.'));
+        }
+        final selected = patients.firstWhere(
+          (patient) => patient['id'] == _selectedPatientId,
+          orElse: () => patients.first,
+        );
+        final patientId = selected['id'] as String;
+        if (_selectedPatientId != patientId) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) setState(() => _selectedPatientId = patientId);
+          });
+        }
+
+        return Column(
+          children: [
+            _patientSelector(patients, patientId),
+            Expanded(child: _buildHistoryLogs(dbService, patientId)),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _patientSelector(
+    List<Map<String, dynamic>> patients,
+    String selectedPatientId,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        decoration: BoxDecoration(
+          color: AppColors.white,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: DropdownButtonHideUnderline(
+          child: DropdownButton<String>(
+            value: selectedPatientId,
+            isExpanded: true,
+            icon: const Icon(Icons.expand_more, color: AppColors.blue),
+            onChanged: (value) {
+              if (value != null) setState(() => _selectedPatientId = value);
+            },
+            items: patients.map((patient) {
+              return DropdownMenuItem<String>(
+                value: patient['id'] as String,
+                child: Text((patient['name'] ?? 'Patient').toString()),
+              );
+            }).toList(),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHistoryLogs(DatabaseService dbService, String patientId) {
+    return StreamBuilder<List<Map<String, dynamic>>>(
+      stream: dbService.getAdherenceLogs(patientId),
                           builder: (context, snapshot) {
                             if (snapshot.hasError) {
                               return Center(
@@ -161,18 +264,6 @@ class HistoryPage extends StatelessWidget {
                               },
                             );
                           },
-                        ),
-                ),
-              ],
-            ),
-            const Positioned(
-                bottom: 0,
-                left: 0,
-                right: 0,
-                child: BottomNav(activeTab: 'History')),
-          ],
-        ),
-      ),
-    );
+                        );
   }
 }

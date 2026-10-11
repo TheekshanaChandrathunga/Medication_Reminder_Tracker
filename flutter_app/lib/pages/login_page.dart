@@ -32,8 +32,17 @@ class _LoginPageState extends State<LoginPage> {
     try {
       final authService = Provider.of<AuthService>(context, listen: false);
       await authService.loginWithEmail(email, password);
+      final role = await authService.getCurrentUserRole();
+      if (role == null) {
+        throw StateError(
+          'Your account profile is missing a valid Patient or Caregiver role.',
+        );
+      }
       if (mounted) {
-        Navigator.pushReplacementNamed(context, '/home');
+        Navigator.pushReplacementNamed(
+          context,
+          role == 'caregiver' ? '/caregiver' : '/home',
+        );
       }
     } catch (e) {
       if (mounted) {

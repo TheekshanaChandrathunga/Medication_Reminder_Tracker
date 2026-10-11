@@ -202,6 +202,81 @@ class DatabaseService {
     }, SetOptions(merge: true));
   }
 
+  Future<String> createCaregiverPatient(
+    String caregiverId,
+    String relationship, {
+    required Map<String, dynamic> patientDetails,
+  }) async {
+    _ensureFirebaseAvailable();
+
+    final patientRef = _db.collection('users').doc();
+    final relationshipRef = _db
+        .collection('caregiver_relationships')
+        .doc('${caregiverId}_${patientRef.id}');
+    final profile = <String, dynamic>{
+      ...patientDetails,
+      'uid': patientRef.id,
+      'role': 'Patient',
+      'createdByCaregiverId': caregiverId,
+      'createdAt': FieldValue.serverTimestamp(),
+    };
+
+    final batch = _db.batch();
+    batch.set(patientRef, profile);
+    batch.set(relationshipRef, {
+      'caregiverId': caregiverId,
+      'patientId': patientRef.id,
+      'relationship': relationship,
+      ...patientDetails,
+      'monitoringSince': FieldValue.serverTimestamp(),
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+    await batch.commit();
+    return patientRef.id;
+  }
+
+  Future<void> updateCaregiverPatient(
+    String caregiverId,
+    String patientId,
+    String relationship, {
+    required Map<String, dynamic> patientDetails,
+  }) async {
+    _ensureFirebaseAvailable();
+
+    final batch = _db.batch();
+    batch.set(
+      _db.collection('users').doc(patientId),
+      patientDetails,
+      SetOptions(merge: true),
+    );
+    batch.set(
+      _db
+          .collection('caregiver_relationships')
+          .doc('${caregiverId}_$patientId'),
+      {
+        ...patientDetails,
+        'caregiverId': caregiverId,
+        'patientId': patientId,
+        'relationship': relationship,
+        'updatedAt': FieldValue.serverTimestamp(),
+      },
+      SetOptions(merge: true),
+    );
+    await batch.commit();
+  }
+
+  Future<void> removeCaregiverPatient(
+    String caregiverId,
+    String patientId,
+  ) async {
+    _ensureFirebaseAvailable();
+
+    await _db
+        .collection('caregiver_relationships')
+        .doc('${caregiverId}_$patientId')
+        .delete();
+  }
+
   Stream<List<Map<String, dynamic>>> getCaregiverNotes(String patientId) {
     if (isSimulation) {
       return Stream.value(const <Map<String, dynamic>>[]);

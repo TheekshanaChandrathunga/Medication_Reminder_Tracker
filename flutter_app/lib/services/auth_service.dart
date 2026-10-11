@@ -31,6 +31,19 @@ class AuthService {
         email: email, password: password);
   }
 
+  Future<String?> getCurrentUserRole() async {
+    if (isSimulation) return 'patient';
+
+    final user = _auth.currentUser;
+    if (user == null) return null;
+
+    final profile = await _db.collection('users').doc(user.uid).get();
+    final role = profile.data()?['role']?.toString().trim().toLowerCase();
+    if (role == 'caregiver') return 'caregiver';
+    if (role == 'patient') return 'patient';
+    return null;
+  }
+
   Future<UserCredential?> registerWithEmail(
       String email, String password, String name, String userType) async {
     if (isSimulation) return null;

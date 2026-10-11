@@ -2,13 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
 import '../constants.dart';
+import '../models/medication_model.dart';
 import '../widgets/bottom_nav.dart';
 import '../services/auth_service.dart';
 import '../services/database_service.dart';
 import '../services/report_service.dart';
 
 class ReportsPage extends StatefulWidget {
-  const ReportsPage({super.key});
+  const ReportsPage({
+    super.key,
+    this.caregiverMode = false,
+    this.initialPatientId,
+  });
+
+  final bool caregiverMode;
+  final String? initialPatientId;
 
   @override
   State<ReportsPage> createState() => _ReportsPageState();
@@ -16,9 +24,16 @@ class ReportsPage extends StatefulWidget {
 
 class _ReportsPageState extends State<ReportsPage> {
   String? _selectedAction;
+  String? _selectedPatientId;
   String _selectedPeriod = 'This Week';
   DateTimeRange? _customRange;
   bool _isGeneratingPdf = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedPatientId = widget.initialPatientId;
+  }
 
   DateTimeRange _getReportRange() {
     final now = DateTime.now();
@@ -56,6 +71,9 @@ class _ReportsPageState extends State<ReportsPage> {
         userId: userId,
         startDate: range.start,
         endDate: range.end,
+        caregiverId: widget.caregiverMode
+            ? Provider.of<AuthService>(context, listen: false).currentUserId
+            : null,
       );
       await reportService.savePdfToDevice(report: report);
 
@@ -173,65 +191,227 @@ class _ReportsPageState extends State<ReportsPage> {
                 Expanded(
                   child: userId == null
                       ? const Center(child: Text('Please login to see reports'))
-                      : StreamBuilder<List<Map<String, dynamic>>>(
-                          stream: dbService.getAdherenceLogs(userId),
-                          builder: (context, snapshot) {
-                            if (snapshot.connectionState ==
-                                ConnectionState.waiting) {
-                              return const Center(
-                                  child: CircularProgressIndicator());
-                            }
+                      : widget.caregiverMode
+                          ? StreamBuilder<List<Map<String, dynamic>>>(
+                              stream: dbService.getCaregiverPatients(userId),
+                              builder: (context, snapshot) {
+                                if (snapshot.hasError) {
+                                  return Center(
+                                    child: Text(
+                                      'Unable to load patients: ${snapshot.error}',
+                                    ),
+                                  );
+                                }
+                                if (snapshot.connectionState ==
+                                    ConnectionState.waiting) {
+                                  return const Center(
+                                      child: CircularProgressIndicator());
+                                }
 
-                            final logs = _filterLogs(snapshot.data ?? []);
-                            final takenCount = logs
-                                .where((l) => l['status'] == 'taken')
-                                .length;
-                            final missedCount = logs
-                                .where((l) => l['status'] == 'missed')
-                                .length;
-                            final total = takenCount + missedCount;
-                            final percentage = total == 0
-                                ? 0
-                                : ((takenCount / total) * 100).round();
+                                final patients = snapshot.data ?? [];
+                                if (patients.isEmpty) {
+                                  return const Center(
+                                    child: Text(
+                                      'No patients linked. Add a patient to generate a report.',
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  );
+                                }
 
-                            return ListView(
-                              padding:
-                                  const EdgeInsets.fromLTRB(16, 16, 16, 100),
-                              children: [
-                                _buildReportTabs(),
-                                const SizedBox(height: 18),
-                                _buildSummaryCard(
-                                    takenCount, missedCount, percentage),
-                                const SizedBox(height: 18),
-                                _buildSectionTitle('Daily Adherence'),
-                                const SizedBox(height: 10),
-                                _buildWeekStrip(),
-                                const SizedBox(height: 18),
-                                _buildActionButton(
-                                  'Generate PDF',
-                                  Icons.picture_as_pdf_rounded,
-                                  onTap: () => _generatePdf(userId),
-                                  isLoading: _isGeneratingPdf,
-                                ),
-                                const SizedBox(height: 12),
-                                _buildActionButton(
-                                    'Email Caregiver', Icons.email_outlined),
-                                const SizedBox(height: 12),
-                                _buildActionButton(
-                                    'Export CSV', Icons.file_download_outlined),
-                              ],
-                            );
-                          },
-                        ),
+                                final selectedPatient = patients.firstWhere(
+                                  (patient) =>
+                                      patient['id'] == _selectedPatientId,
+                                  orElse: () => patients.first,
+                                );
+                                final selectedId =
+                                    selectedPatient['id'] as String;
+                                if (_selectedPatientId != selectedId) {
+                                  WidgetsBinding.instance
+                                      .addPostFrameCallback((_) {
+                                    if (mounted) {
+                                      setState(() {
+                                        _selectedPatientId = selectedId;
+                                      });
+                                    }
+                                  });
+                                }
+
+                                return _buildReportForUser(
+                                  dbService,
+                                  selectedId,
+                                  patients: patients,
+                                );
+                              },
+                            )
+                          : _buildReportForUser(dbService, userId),
                 ),
               ],
             ),
-            const Positioned(
+            Positioned(
                 bottom: 0,
                 left: 0,
                 right: 0,
-                child: BottomNav(activeTab: 'Reports')),
+                child: BottomNav(
+                  activeTab: 'Reports',
+                  caregiverMode: widget.caregiverMode,
+                )),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildReportForUser(
+    DatabaseService dbService,
+    String patientId, {
+    List<Map<String, dynamic>>? patients,
+  }) {
+    return StreamBuilder<List<Map<String, dynamic>>>(
+      stream: dbService.getAdherenceLogs(patientId),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        final logs = _filterLogs(snapshot.data ?? []);
+        final takenCount = logs.where((log) => log['status'] == 'taken').length;
+        final missedCount =
+            logs.where((log) => log['status'] == 'missed').length;
+        final total = takenCount + missedCount;
+        final percentage =
+            total == 0 ? 0 : ((takenCount / total) * 100).round();
+
+        return ListView(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
+          children: [
+            if (patients != null) ...[
+              _buildPatientSelector(patients, patientId),
+              const SizedBox(height: 18),
+            ],
+            _buildReportTabs(),
+            const SizedBox(height: 18),
+            _buildSummaryCard(takenCount, missedCount, percentage),
+            const SizedBox(height: 18),
+            _buildMedicationStatus(dbService, patientId, logs),
+            const SizedBox(height: 18),
+            _buildSectionTitle('Daily Adherence'),
+            const SizedBox(height: 10),
+            _buildWeekStrip(logs),
+            const SizedBox(height: 18),
+            _buildActionButton(
+              'Generate PDF',
+              Icons.picture_as_pdf_rounded,
+              onTap: () => _generatePdf(patientId),
+              isLoading: _isGeneratingPdf,
+            ),
+            const SizedBox(height: 12),
+            _buildActionButton('Email Caregiver', Icons.email_outlined),
+            const SizedBox(height: 12),
+            _buildActionButton('Export CSV', Icons.file_download_outlined),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildMedicationStatus(
+    DatabaseService dbService,
+    String patientId,
+    List<Map<String, dynamic>> logs,
+  ) {
+    return StreamBuilder<List<Medication>>(
+      stream: dbService.getMedications(patientId),
+      builder: (context, snapshot) {
+        final medications = snapshot.data ?? [];
+        if (medications.isEmpty) {
+          return const SizedBox.shrink();
+        }
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildSectionTitle('Medication adherence'),
+            const SizedBox(height: 10),
+            ...medications.map((medication) {
+              final medicationLogs = logs.where(
+                (log) => log['medicationId'] == medication.id,
+              );
+              final taken = medicationLogs
+                  .where((log) => log['status'] == 'taken')
+                  .length;
+              final missed = medicationLogs
+                  .where((log) => log['status'] == 'missed')
+                  .length;
+              final total = taken + missed;
+              final percent = total == 0 ? 0 : (taken / total * 100).round();
+
+              return Container(
+                margin: const EdgeInsets.only(bottom: 8),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.white,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.medication_outlined,
+                        color: AppColors.blue),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(medication.name,
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.w700)),
+                          Text(
+                            '$taken taken • $missed missed • $percent% adherence',
+                            style: const TextStyle(
+                                fontSize: 12, color: AppColors.subText),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildPatientSelector(
+    List<Map<String, dynamic>> patients,
+    String selectedPatientId,
+  ) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          isExpanded: true,
+          value: selectedPatientId,
+          icon: const Icon(Icons.expand_more, color: AppColors.blue),
+          hint: const Text('Select patient'),
+          onChanged: (patientId) {
+            if (patientId != null) {
+              setState(() => _selectedPatientId = patientId);
+            }
+          },
+          items: patients.map((patient) {
+            final patientId = patient['id'] as String;
+            return DropdownMenuItem<String>(
+              value: patientId,
+              child: Text((patient['name'] ?? 'Patient').toString()),
+            );
+          }).toList(),
         ),
       ),
     );
@@ -400,9 +580,28 @@ class _ReportsPageState extends State<ReportsPage> {
     );
   }
 
-  Widget _buildWeekStrip() {
-    final days = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
-    final statuses = [true, true, false, true, false, false, true];
+  Widget _buildWeekStrip(List<Map<String, dynamic>> logs) {
+    final today = DateTime.now();
+    final dates = List.generate(
+      7,
+      (index) => DateTime(
+        today.year,
+        today.month,
+        today.day,
+      ).subtract(Duration(days: 6 - index)),
+    );
+    final weekdayLabels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+    final days = dates.map((date) => weekdayLabels[date.weekday - 1]).toList();
+    final statuses = dates.map((date) {
+      return logs.any((log) {
+        final logDate = _logDate(log);
+        return log['status'] == 'taken' &&
+            logDate != null &&
+            logDate.year == date.year &&
+            logDate.month == date.month &&
+            logDate.day == date.day;
+      });
+    }).toList();
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
