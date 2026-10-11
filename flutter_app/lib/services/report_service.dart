@@ -18,6 +18,7 @@ class MedicationReport {
     required this.logs,
     required this.allLogs,
     required this.patientProfile,
+    required this.caregiverProfile,
     required this.csvBytes,
     required this.pdfBytes,
   });
@@ -28,6 +29,7 @@ class MedicationReport {
   final List<Map<String, dynamic>> logs;
   final List<Map<String, dynamic>> allLogs;
   final Map<String, dynamic> patientProfile;
+  final Map<String, dynamic> caregiverProfile;
   final Uint8List csvBytes;
   final Uint8List pdfBytes;
 
@@ -53,6 +55,7 @@ class ReportService {
     required String userId,
     required DateTime startDate,
     required DateTime endDate,
+    String? caregiverId,
   }) async {
     _validateRange(userId, startDate, endDate);
     _ensureFirebaseAvailable();
@@ -68,23 +71,32 @@ class ReportService {
       999,
     );
 
-    final results = await Future.wait<QuerySnapshot<Map<String, dynamic>>>([
-      _firestore
+    late final QuerySnapshot<Map<String, dynamic>> medicationSnapshot;
+    late final QuerySnapshot<Map<String, dynamic>> logSnapshot;
+    try {
+      medicationSnapshot = await _firestore
           .collection('medications')
           .where('userId', isEqualTo: userId)
-          .get(),
-      _firestore
+          .get();
+      logSnapshot = await _firestore
           .collection('adherence_logs')
           .where('userId', isEqualTo: userId)
-          .get(),
-    ]);
+          .get();
+    } on FirebaseException catch (error) {
+      if (error.code == 'permission-denied') {
+        throw StateError(
+          'You do not have permission to read this patient report. '
+          'Verify that the patient is linked to this caregiver and deploy '
+          'the latest Firestore rules.',
+        );
+      }
+      rethrow;
+    }
 
-    final medications = results[0]
-        .docs
+    final medications = medicationSnapshot.docs
         .map((doc) => Medication.fromMap(doc.data(), doc.id))
         .toList();
-    final allLogs = results[1]
-        .docs
+    final allLogs = logSnapshot.docs
         .map((doc) => {
               ...doc.data(),
               'id': doc.id,
@@ -96,8 +108,14 @@ class ReportService {
       final date = _logDate(log);
       return date != null && !date.isBefore(start) && !date.isAfter(end);
     }).toList();
-    final patientProfile =
-        (await _firestore.collection('users').doc(userId).get()).data() ?? {};
+    final patientProfile = await _readProfile(
+      userId,
+      label: 'patient',
+    );
+    final resolvedCaregiverId = caregiverId ?? await _findCaregiverId(userId);
+    final caregiverProfile = resolvedCaregiverId == null
+        ? <String, dynamic>{}
+        : await _readProfile(resolvedCaregiverId, label: 'caregiver');
 
     final csvBytes =
         Uint8List.fromList(utf8.encode(_buildCsv(medications, logs)));
@@ -108,6 +126,7 @@ class ReportService {
       logs: logs,
       allLogs: allLogs,
       patientProfile: patientProfile,
+      caregiverProfile: caregiverProfile,
       csvBytes: csvBytes,
       pdfBytes: Uint8List(0),
     );
@@ -119,9 +138,49 @@ class ReportService {
       logs: report.logs,
       allLogs: report.allLogs,
       patientProfile: report.patientProfile,
+      caregiverProfile: report.caregiverProfile,
       csvBytes: report.csvBytes,
       pdfBytes: await _buildPdf(report),
     );
+  }
+
+  Future<String?> _findCaregiverId(String patientId) async {
+    late final QuerySnapshot<Map<String, dynamic>> relationships;
+    try {
+      relationships = await _firestore
+          .collection('caregiver_relationships')
+          .where('patientId', isEqualTo: patientId)
+          .limit(1)
+          .get();
+    } on FirebaseException catch (error) {
+      if (error.code == 'permission-denied') {
+        throw StateError(
+          'You do not have permission to read caregiver details for this report. '
+          'Deploy the latest Firestore rules and verify the caregiver link.',
+        );
+      }
+      rethrow;
+    }
+    if (relationships.docs.isEmpty) return null;
+    return relationships.docs.first.data()['caregiverId']?.toString();
+  }
+
+  Future<Map<String, dynamic>> _readProfile(
+    String userId, {
+    required String label,
+  }) async {
+    try {
+      return (await _firestore.collection('users').doc(userId).get()).data() ??
+          {};
+    } on FirebaseException catch (error) {
+      if (error.code == 'permission-denied') {
+        throw StateError(
+          'You do not have permission to read the $label details for this report. '
+          'Verify the caregiver-patient link and deploy the latest Firestore rules.',
+        );
+      }
+      rethrow;
+    }
   }
 
   Future<String> uploadPdf({
@@ -218,6 +277,14 @@ class ReportService {
             data: _patientProfileRows(report.patientProfile),
           ),
           pw.SizedBox(height: 12),
+          pw.Text('Caregiver information',
+              style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+          pw.SizedBox(height: 6),
+          pw.TableHelper.fromTextArray(
+            headers: ['Field', 'Value'],
+            data: _caregiverProfileRows(report.caregiverProfile),
+          ),
+          pw.SizedBox(height: 12),
           pw.TableHelper.fromTextArray(
             headers: ['Metric', 'Value'],
             data: [
@@ -309,6 +376,29 @@ class ReportService {
     return rows.isEmpty
         ? [
             ['No patient information available', '']
+          ]
+        : rows;
+  }
+
+  List<List<String>> _caregiverProfileRows(Map<String, dynamic> profile) {
+    const fields = [
+      ('name', 'Name'),
+      ('email', 'Email'),
+      ('phone', 'Phone'),
+      ('age', 'Age'),
+      ('gender', 'Gender'),
+      ('address', 'Address'),
+      ('relationship', 'Relationship to patient'),
+    ];
+
+    final rows = fields
+        .where(
+            (field) => profile[field.$1]?.toString().trim().isNotEmpty == true)
+        .map((field) => [field.$2, profile[field.$1].toString()])
+        .toList();
+    return rows.isEmpty
+        ? [
+            ['No caregiver information available', '']
           ]
         : rows;
   }

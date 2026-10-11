@@ -17,6 +17,7 @@ import 'pages/profile_page.dart';
 import 'pages/history_page.dart';
 import 'pages/reports_page.dart';
 import 'pages/caregiver_home_page.dart';
+import 'pages/caregiver_patients_page.dart';
 import 'services/auth_service.dart';
 import 'services/database_service.dart';
 import 'services/notification_service.dart';
@@ -93,10 +94,20 @@ class MediTrackApp extends StatelessWidget {
             }
             return const AddMedicationPage();
           },
-          '/profile': (context) => const ProfilePage(),
-          '/history': (context) => const HistoryPage(),
-          '/reports': (context) => const ReportsPage(),
+          '/profile': (context) => ProfilePage(
+                caregiverMode:
+                    ModalRoute.of(context)?.settings.arguments == true,
+              ),
+          '/history': (context) => HistoryPage(
+                caregiverMode:
+                    ModalRoute.of(context)?.settings.arguments == true,
+              ),
+          '/reports': (context) => ReportsPage(
+                caregiverMode:
+                    ModalRoute.of(context)?.settings.arguments == true,
+              ),
           '/caregiver': (context) => const CaregiverHomePage(),
+          '/caregiver-patients': (context) => const CaregiverPatientsPage(),
         },
       ),
     );
@@ -127,21 +138,67 @@ class AuthWrapper extends StatelessWidget {
                   snapshot.data!.uid,
                 ),
             builder: (context, profileSnapshot) {
+              if (profileSnapshot.hasError) {
+                return Center(
+                  child: Text(
+                    'Unable to load your account profile: '
+                    '${profileSnapshot.error}',
+                  ),
+                );
+              }
               if (profileSnapshot.connectionState == ConnectionState.waiting) {
                 return const SplashPage();
               }
 
-              final role =
-                  profileSnapshot.data?['role']?.toString().toLowerCase();
-              return role == 'caregiver'
-                  ? const CaregiverHomePage()
-                  : const HomePage();
+              final role = profileSnapshot.data?['role']
+                  ?.toString()
+                  .trim()
+                  .toLowerCase();
+              if (role == 'caregiver') return const CaregiverHomePage();
+              if (role == 'patient') return const HomePage();
+              return const _InvalidProfileRolePage();
             },
           );
         }
 
         return const LoginPage();
       },
+    );
+  }
+}
+
+class _InvalidProfileRolePage extends StatelessWidget {
+  const _InvalidProfileRolePage();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Account role not configured',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Please contact support to set your account as Patient or Caregiver.',
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              FilledButton(
+                onPressed: () async {
+                  await context.read<AuthService>().signOut();
+                },
+                child: const Text('Sign out'),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

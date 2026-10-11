@@ -7,7 +7,9 @@ import '../services/auth_service.dart';
 import '../services/database_service.dart';
 
 class ProfilePage extends StatelessWidget {
-  const ProfilePage({super.key});
+  const ProfilePage({super.key, this.caregiverMode = false});
+
+  final bool caregiverMode;
 
   Future<void> _confirmLogout(BuildContext context) async {
     final shouldLogout = await showDialog<bool>(
@@ -274,14 +276,20 @@ class ProfilePage extends StatelessWidget {
                                 _buildMenuTile(
                                   icon: Icons.history,
                                   title: 'Adherence History Log',
-                                  onTap: () =>
-                                      Navigator.pushNamed(context, '/history'),
+                                  onTap: () => Navigator.pushNamed(
+                                    context,
+                                    '/history',
+                                    arguments: caregiverMode,
+                                  ),
                                 ),
                                 _buildMenuTile(
                                   icon: Icons.bar_chart,
                                   title: 'View Health Reports',
-                                  onTap: () =>
-                                      Navigator.pushNamed(context, '/reports'),
+                                  onTap: () => Navigator.pushNamed(
+                                    context,
+                                    '/reports',
+                                    arguments: caregiverMode,
+                                  ),
                                 ),
                                 _buildMenuTile(
                                   icon: Icons.help_outline,
@@ -297,11 +305,14 @@ class ProfilePage extends StatelessWidget {
                 ),
               ],
             ),
-            const Positioned(
+            Positioned(
                 bottom: 0,
                 left: 0,
                 right: 0,
-                child: BottomNav(activeTab: 'Profile')),
+                child: BottomNav(
+                  activeTab: 'Profile',
+                  caregiverMode: caregiverMode,
+                )),
           ],
         ),
       ),
