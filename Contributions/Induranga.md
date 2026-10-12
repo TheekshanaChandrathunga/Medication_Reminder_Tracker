@@ -37,9 +37,5 @@ I worked as the **Product Owner (PO)** for the Medication Reminder & Tracker pro
 
 ## Outcome
 
-My contribution helped establish a clear understanding of the product requirements and provided the team with an organized foundation for planning and developing the Medication Reminder & Tracker application. By gathering and clarifying requirements, maintaining and prioritizing the Product Backlog, defining acceptance criteria, and refining User Stories, I supported the team in focusing on user value and the planned Sprint goals.
-
-The architecture, ER, use case, and user journey diagrams helped communicate the system structure, data relationships, functional scope, and expected user interactions. My frontend contributions to the Caregiver Home and Profile screens also supported the development of the application's caregiver-related functionality.
-
-Overall, my work combined Product Ownership, requirements engineering, system analysis and design, and frontend development, contributing to both the planning and implementation of the project.
+My contribution helped establish clear product requirements and an organized foundation for developing the Medication Reminder & Tracker application. As Product Owner, I gathered requirements, prioritized the Product Backlog, refined User Stories, and defined acceptance criteria. I also created the architecture, ER, use case, and user journey diagrams to communicate the system design and user interactions. Additionally, I contributed to the frontend development of the Caregiver Home and Profile screens, supporting both the planning and implementation of the project.
 
