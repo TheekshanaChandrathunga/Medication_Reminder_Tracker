@@ -1,95 +1,112 @@
 # Product Backlog – Medication Reminder & Tracker
 
-## Product Backlog
+## 1. Project Overview
 
-| Backlog ID | User Story ID | Epic | User Story | Priority | Story Points | Sprint |
-|---|---|---|---|---|---:|---|
-| PB-01 | US-01 | Authentication | As a new user, I want to create an account using my email and password so that I can securely access and manage my medication information. | High | 3 | Sprint 1 |
-| PB-02 | US-02 | Authentication | As a registered user, I want to log in securely so that I can access my medication schedule and records. | High | 3 | Sprint 1 |
-| PB-03 | US-03 | Medication Management | As a patient, I want to add medication details including dosage and schedule so that I receive accurate reminders. | High | 5 | Sprint 1 |
-| PB-04 | US-04 | Medication Management | As a patient, I want to view all my medications so that I can manage them easily. | High | 3 | Sprint 1 |
-| PB-05 | US-05 | Medication Management | As a patient, I want to edit medication details so that my records remain accurate. | High | 5 | Sprint 2 |
-| PB-06 | US-06 | Medication Management | As a patient, I want to delete medications that I no longer use so that my list remains organized. | High | 3 | Sprint 2 |
-| PB-07 | US-07 | Scheduling | As a patient, I want to view today's medication schedule so that I know what medications to take today. | High | 5 | Sprint 2 |
-| PB-08 | US-08 | Reminders | As a patient, I want to receive medication reminders so that I do not miss doses. | High | 5 | Sprint 3 |
-| PB-09 | US-09 | Adherence Tracking | As a patient, I want to mark medications as taken so that my medication history is accurate. | High | 3 | Sprint 3 |
-| PB-10 | US-10 | Adherence Tracking | As a patient, I want to mark medications as missed so that I can track missed doses. | High | 3 | Sprint 3 |
-| PB-11 | US-11 | Adherence Tracking | As a patient, I want to view my medication history so that I can monitor adherence. | High | 5 | Sprint 3 |
-| PB-12 | US-12 | Account Management | As a user, I want to reset my password so that I can regain access to my account. | Medium | 3 | Sprint 4 |
-| PB-13 | US-13 | Account Management | As a user, I want to update my profile information so that my personal information stays current. | Medium | 2 | Sprint 4 |
-| PB-14 | US-14 | Reminders | As a patient, I want to snooze reminders so that I can be reminded again later. | Medium | 3 | Sprint 4 |
-| PB-15 | US-15 | Reminders | As a patient, I want to receive a second reminder if I miss a dose so that I have another chance to take it. | Medium | 3 | Sprint 4 |
-| PB-16 | US-16 | Inventory Management | As a patient, I want to receive refill reminders so that I do not run out of medication. | Medium | 5 | Sprint 4 |
-| PB-17 | US-17 | Reports | As a patient, I want to view weekly and monthly adherence reports so that I can monitor my medication habits. | Medium | 5 | Sprint 4 |
-| PB-18 | US-18 | Reports | As a user, I want to generate PDF reports so that I can share them with doctors. | Medium | 5 | Sprint 4 |
-| PB-19 | US-19 | Reports | As a user, I want to email reports so that caregivers or doctors can review them. | Medium | 3 | Sprint 4 |
-| PB-20 | US-20 | Caregiver Module | As a caregiver, I want to view patient schedules so that I can monitor medication adherence. | Medium | 5 | Sprint 5 |
-| PB-21 | US-21 | Caregiver Module | As a caregiver, I want to receive missed-dose notifications so that I can assist patients. | Medium | 5 | Sprint 5 |
-| PB-22 | US-22 | Localization | As a user, I want to switch languages so that I can use the application in my preferred language. | Low | 3 | Sprint 5 |
-| PB-23 | US-23 | Search | As a patient, I want to search medications so that I can quickly find them. | Low | 3 | Sprint 5 |
-| PB-24 | US-24 | Medication Management | As a patient, I want to upload medication photos so that I can identify medications easily. | Low | 3 | Sprint 5 |
-| PB-25 | US-25 | Notifications | As a patient, I want to receive daily summaries so that I can plan my medication schedule. | Low | 3 | Sprint 5 |
-| PB-26 | US-26 | Notes | As a patient, I want to add notes to medication records so that I can record observations. | Low | 2 | Sprint 5 |
-| PB-27 | US-27 | Reports | As a user, I want to view adherence charts so that I can visualize progress. | Low | 5 | Sprint 5 |
-| PB-28 | US-28 | Export | As a user, I want to export medication history as CSV so that I can use it elsewhere. | Low | 3 | Sprint 5 |
-| PB-29 | US-29 | Caregiver Module | As a caregiver, I want weekly adherence reports so that I can monitor patients. | Low | 3 | Sprint 5 |
-| PB-30 | US-30 | Caregiver Module | As a caregiver, I want to manage multiple patients so that I can monitor all of them from one account. | Low | 8 | Sprint 5 |
+The Medication Reminder & Tracker helps users manage medications, follow schedules, record dose adherence, review reports, and share relevant information with authorized caregivers.
 
-## Epics
+**Current status:** Sprint 5 is in progress. Sprints 1–4 are closed.
 
-| Epic ID | Epic Name |
+## 2. Backlog Summary
+
+- **Active user stories:** 28
+- **Removed features:** Language Selection and Adherence Charts
+- **Current sprint:** Sprint 5
+- **Sprint 5 workload:** 7 stories, 25 story points
+- **Sprint 5 status:** US-22–US-26 are in Review; US-27–US-28 are In Progress
+
+## 3. Epics
+
+| Epic | Description |
 |---|---|
-| EP-01 | Authentication |
-| EP-02 | Medication Management |
-| EP-03 | Scheduling |
-| EP-04 | Reminders |
-| EP-05 | Adherence Tracking |
-| EP-06 | Reports & Analytics |
-| EP-07 | Caregiver Management |
-| EP-08 | Notifications |
-| EP-09 | Localization |
-| EP-10 | Search & Export |
+| Authentication & Profile | Registration, login, password reset, and profile management |
+| Medication Management | Add, view, edit, delete, search, and annotate medications |
+| Scheduling & Reminders | Daily schedules, reminders, snoozing, and missed-dose reminders |
+| Adherence Tracking | Record taken/missed doses, review history, and daily summaries |
+| Refill Management | Medication supply and refill reminders |
+| Reports & Export | Adherence reports and report exports |
+| Caregiver | Authorized caregiver access to patient schedules, missed doses, reports, and multiple patients |
 
-## Sprint Allocation
+## 4. Complete Product Backlog
 
-| Sprint | User Stories | Story Points |
+**Priority key:** High, Medium, Low
+
+| ID | User Story / Feature | Epic | Priority | Points | Sprint | Status |
+|---|---|---|---|---:|---|---|
+| US-01 | Register an account | Authentication & Profile | High | 3 | Sprint 1 | Done |
+| US-02 | Log in securely | Authentication & Profile | High | 3 | Sprint 1 | Done |
+| US-03 | Add a medication | Medication Management | High | 5 | Sprint 1 | Done |
+| US-04 | View my medications | Medication Management | High | 3 | Sprint 1 | Done |
+| US-05 | Edit medication details | Medication Management | High | 5 | Sprint 2 | Done |
+| US-06 | Delete a medication | Medication Management | High | 3 | Sprint 2 | Done |
+| US-07 | View today's medication schedule | Scheduling & Reminders | High | 5 | Sprint 2 | Done |
+| US-08 | Receive medication reminders | Scheduling & Reminders | High | 5 | Sprint 2 | Done |
+| US-09 | Mark a medication dose as taken | Adherence Tracking | High | 3 | Sprint 2 | Done |
+| US-10 | Mark a medication dose as missed | Adherence Tracking | High | 3 | Sprint 3 | Done |
+| US-11 | View medication history | Adherence Tracking | High | 5 | Sprint 3 | Done |
+| US-12 | Reset a forgotten password | Authentication & Profile | Medium | 3 | Sprint 3 | Done |
+| US-13 | Update profile information | Authentication & Profile | Medium | 2 | Sprint 3 | Done |
+| US-14 | Snooze a medication reminder | Scheduling & Reminders | Medium | 3 | Sprint 3 | Done |
+| US-15 | Receive a second reminder for a missed dose | Scheduling & Reminders | Medium | 3 | Sprint 3 | Done |
+| US-16 | Receive medication refill reminders | Refill Management | Medium | 5 | Sprint 4 | Done |
+| US-17 | View weekly and monthly adherence reports | Reports & Export | Medium | 5 | Sprint 4 | Done |
+| US-18 | Generate PDF reports | Reports & Export | Medium | 5 | Sprint 4 | Done |
+| US-19 | Email reports | Reports & Export | Medium | 3 | Sprint 4 | Done |
+| US-20 | Allow a caregiver to view a patient's schedule | Caregiver | Medium | 5 | Sprint 4 | Done |
+| US-21 | Notify a caregiver about missed doses | Caregiver | Medium | 5 | Sprint 4 | Done |
+| US-22 | Search for medications by name | Medication Management | Low | 3 | Sprint 5 | Review |
+| US-23 | Upload a medication photo | Medication Management | Low | 3 | Sprint 5 | Review |
+| US-24 | View a daily medication summary | Adherence Tracking | Low | 3 | Sprint 5 | Review |
+| US-25 | Add notes to a medication | Medication Management | Low | 2 | Sprint 5 | Review |
+| US-26 | Export reports as CSV | Reports & Export | Low | 3 | Sprint 5 | Review |
+| US-27 | Allow a caregiver to view weekly reports | Caregiver | Low | 3 | Sprint 5 | In Progress |
+| US-28 | Allow a caregiver to manage multiple patients | Caregiver | Low | 8 | Sprint 5 | In Progress |
+
+## 5. Removed User Stories
+
+The following features are removed from the active backlog:
+- **Language Selection**
+- **Adherence Charts**
+
+The remaining Sprint 5 stories have been renumbered consecutively from US-22 to US-28. Update corresponding GitHub issue titles and references to match.
+
+## 6. Sprint Allocation
+
+| Sprint | Focus | User Stories | Status |
+|---|---|---|---|
+| Sprint 1 | Authentication & Core Medication Management | US-01–US-04 | Closed |
+| Sprint 2 | Medication Management & Scheduling | US-05–US-09 | Closed |
+| Sprint 3 | Adherence, Account & Reminder Management | US-10–US-15 | Closed |
+| Sprint 4 | Refills, Reports & Caregiver Management | US-16–US-21 | Closed |
+| Sprint 5 | Additional Features & Caregiver Enhancements | US-22–US-28 | In Progress |
+
+## 7. Sprint 5 Status Summary
+
+| Status | User Stories | Story Points |
 |---|---|---:|
-| Sprint 1 | US-01 – US-04 | 14 |
-| Sprint 2 | US-05 – US-07 | 13 |
-| Sprint 3 | US-08 – US-11 | 16 |
-| Sprint 4 | US-12 – US-19 | 29 |
-| Sprint 5 | US-20 – US-30 | 43 |
+| Review | US-22, US-23, US-24, US-25, US-26 | 14 |
+| In Progress | US-27, US-28 | 11 |
+| **Total** | **7 stories** | **25** |
 
-## Recommended GitHub Labels
+## 8. Suggested GitHub Labels
 
-### Priority Labels
+- `user-story`
+- `priority: high`
+- `priority: medium`
+- `priority: low`
+- `authentication`
+- `medication`
+- `scheduling`
+- `notification`
+- `adherence`
+- `reporting`
+- `caregiver`
+- `refill`
 
-```text
-priority: high
-priority: medium
-priority: low
-```
+## 9. Backlog Maintenance Notes
 
-### Type Labels
-
-```text
-user-story
-bug
-documentation
-enhancement
-```
-
-### Module Labels
-
-```text
-authentication
-medication
-schedule
-reminder
-report
-caregiver
-frontend
-backend
-database
-testing
-```
+- Keep Sprints 1–4 closed and preserve their issue and milestone history.
+- Keep Sprint 5 open while stories remain under review or in progress.
+- Move US-22–US-26 to Done only after review and testing are complete.
+- Move US-27–US-28 through review and testing before marking them Done.
+- Re-estimate or split a story if its scope is too large for the remaining sprint time.
+- Revisit priorities and acceptance criteria during backlog refinement when needed.
