@@ -1,112 +1,54 @@
-# Product Backlog – Medication Reminder & Tracker
+# Updated Product Backlog – Medication Reminder & Tracker
 
-## 1. Project Overview
+## 1. Introduction
 
-The Medication Reminder & Tracker helps users manage medications, follow schedules, record dose adherence, review reports, and share relevant information with authorized caregivers.
+The product backlog for the Medication Reminder & Tracker application contains 28 active user stories organized into five sprints. The backlog was updated to reflect the completion of Sprint 5 and the overall progress of the project.
 
-**Current status:** Sprint 5 is in progress. Sprints 1–4 are closed.
+The two previously removed user stories, **Language Selection** and **Adherence Charts**, are excluded from the active product backlog. All five sprints have now been closed, and all 28 active user stories are marked as completed.
 
-## 2. Backlog Summary
+## 2. Sprint 5 – Additional Features & Caregiver Enhancements
 
-- **Active user stories:** 28
-- **Removed features:** Language Selection and Adherence Charts
-- **Current sprint:** Sprint 5
-- **Sprint 5 workload:** 7 stories, 25 story points
-- **Sprint 5 status:** US-22–US-26 are in Review; US-27–US-28 are In Progress
+Sprint 5 focused on completing additional medication management features, improving access to medication information, supporting report exports, and enhancing caregiver functionality.
 
-## 3. Epics
+The following user stories were completed during Sprint 5:
 
-| Epic | Description |
-|---|---|
-| Authentication & Profile | Registration, login, password reset, and profile management |
-| Medication Management | Add, view, edit, delete, search, and annotate medications |
-| Scheduling & Reminders | Daily schedules, reminders, snoozing, and missed-dose reminders |
-| Adherence Tracking | Record taken/missed doses, review history, and daily summaries |
-| Refill Management | Medication supply and refill reminders |
-| Reports & Export | Adherence reports and report exports |
-| Caregiver | Authorized caregiver access to patient schedules, missed doses, reports, and multiple patients |
+| User Story ID | User Story | Story Points | Status |
+|---|---|---:|---|
+| US-22 | Search Medication | 3 | Done |
+| US-23 | Upload Medication Photo | 3 | Done |
+| US-24 | View Daily Medication Summary | 3 | Done |
+| US-25 | Add Medication Notes | 2 | Done |
+| US-26 | Export Reports as CSV | 3 | Done |
+| US-27 | Caregiver Views Weekly Reports | 3 | Done |
+| US-28 | Caregiver Manages Multiple Patients | 8 | Done |
+| **Total** | **7 User Stories** | **25** | **Completed** |
 
-## 4. Complete Product Backlog
+## 3. Overall Sprint Summary
 
-**Priority key:** High, Medium, Low
+The project was completed through five sprints, each focusing on a specific set of application features.
 
-| ID | User Story / Feature | Epic | Priority | Points | Sprint | Status |
-|---|---|---|---|---:|---|---|
-| US-01 | Register an account | Authentication & Profile | High | 3 | Sprint 1 | Done |
-| US-02 | Log in securely | Authentication & Profile | High | 3 | Sprint 1 | Done |
-| US-03 | Add a medication | Medication Management | High | 5 | Sprint 1 | Done |
-| US-04 | View my medications | Medication Management | High | 3 | Sprint 1 | Done |
-| US-05 | Edit medication details | Medication Management | High | 5 | Sprint 2 | Done |
-| US-06 | Delete a medication | Medication Management | High | 3 | Sprint 2 | Done |
-| US-07 | View today's medication schedule | Scheduling & Reminders | High | 5 | Sprint 2 | Done |
-| US-08 | Receive medication reminders | Scheduling & Reminders | High | 5 | Sprint 2 | Done |
-| US-09 | Mark a medication dose as taken | Adherence Tracking | High | 3 | Sprint 2 | Done |
-| US-10 | Mark a medication dose as missed | Adherence Tracking | High | 3 | Sprint 3 | Done |
-| US-11 | View medication history | Adherence Tracking | High | 5 | Sprint 3 | Done |
-| US-12 | Reset a forgotten password | Authentication & Profile | Medium | 3 | Sprint 3 | Done |
-| US-13 | Update profile information | Authentication & Profile | Medium | 2 | Sprint 3 | Done |
-| US-14 | Snooze a medication reminder | Scheduling & Reminders | Medium | 3 | Sprint 3 | Done |
-| US-15 | Receive a second reminder for a missed dose | Scheduling & Reminders | Medium | 3 | Sprint 3 | Done |
-| US-16 | Receive medication refill reminders | Refill Management | Medium | 5 | Sprint 4 | Done |
-| US-17 | View weekly and monthly adherence reports | Reports & Export | Medium | 5 | Sprint 4 | Done |
-| US-18 | Generate PDF reports | Reports & Export | Medium | 5 | Sprint 4 | Done |
-| US-19 | Email reports | Reports & Export | Medium | 3 | Sprint 4 | Done |
-| US-20 | Allow a caregiver to view a patient's schedule | Caregiver | Medium | 5 | Sprint 4 | Done |
-| US-21 | Notify a caregiver about missed doses | Caregiver | Medium | 5 | Sprint 4 | Done |
-| US-22 | Search for medications by name | Medication Management | Low | 3 | Sprint 5 | Review |
-| US-23 | Upload a medication photo | Medication Management | Low | 3 | Sprint 5 | Review |
-| US-24 | View a daily medication summary | Adherence Tracking | Low | 3 | Sprint 5 | Review |
-| US-25 | Add notes to a medication | Medication Management | Low | 2 | Sprint 5 | Review |
-| US-26 | Export reports as CSV | Reports & Export | Low | 3 | Sprint 5 | Review |
-| US-27 | Allow a caregiver to view weekly reports | Caregiver | Low | 3 | Sprint 5 | In Progress |
-| US-28 | Allow a caregiver to manage multiple patients | Caregiver | Low | 8 | Sprint 5 | In Progress |
+| Sprint | Main Focus | Story Points | Status |
+|---|---|---:|---|
+| Sprint 1 | Authentication and Core Medication Management | 14 | Closed |
+| Sprint 2 | Medication Management and Scheduling | 21 | Closed |
+| Sprint 3 | Adherence, Account and Reminder Management | 19 | Closed |
+| Sprint 4 | Refills, Reports and Caregiver Management | 28 | Closed |
+| Sprint 5 | Additional Features and Caregiver Enhancements | 25 | Closed |
 
-## 5. Removed User Stories
+## 4. Final Product Backlog Status
 
-The following features are removed from the active backlog:
-- **Language Selection**
-- **Adherence Charts**
+At the end of Sprint 5, all 28 active user stories were marked as **Done**. All five sprints were closed, indicating that the planned sprint work had been completed according to the project's final backlog status.
 
-The remaining Sprint 5 stories have been renumbered consecutively from US-22 to US-28. Update corresponding GitHub issue titles and references to match.
+The final backlog summary is as follows:
 
-## 6. Sprint Allocation
+- **Total active user stories:** 28
+- **Completed user stories:** 28
+- **Total sprints:** 5
+- **Closed sprints:** 5
+- **Sprint 5 completed stories:** 7
+- **Sprint 5 completed story points:** 25
 
-| Sprint | Focus | User Stories | Status |
-|---|---|---|---|
-| Sprint 1 | Authentication & Core Medication Management | US-01–US-04 | Closed |
-| Sprint 2 | Medication Management & Scheduling | US-05–US-09 | Closed |
-| Sprint 3 | Adherence, Account & Reminder Management | US-10–US-15 | Closed |
-| Sprint 4 | Refills, Reports & Caregiver Management | US-16–US-21 | Closed |
-| Sprint 5 | Additional Features & Caregiver Enhancements | US-22–US-28 | In Progress |
+## 5. Conclusion
 
-## 7. Sprint 5 Status Summary
-
-| Status | User Stories | Story Points |
-|---|---|---:|
-| Review | US-22, US-23, US-24, US-25, US-26 | 14 |
-| In Progress | US-27, US-28 | 11 |
-| **Total** | **7 stories** | **25** |
-
-## 8. Suggested GitHub Labels
-
-- `user-story`
-- `priority: high`
-- `priority: medium`
-- `priority: low`
-- `authentication`
-- `medication`
-- `scheduling`
-- `notification`
-- `adherence`
-- `reporting`
-- `caregiver`
-- `refill`
-
-## 9. Backlog Maintenance Notes
-
-- Keep Sprints 1–4 closed and preserve their issue and milestone history.
-- Keep Sprint 5 open while stories remain under review or in progress.
-- Move US-22–US-26 to Done only after review and testing are complete.
-- Move US-27–US-28 through review and testing before marking them Done.
-- Re-estimate or split a story if its scope is too large for the remaining sprint time.
-- Revisit priorities and acceptance criteria during backlog refinement when needed.
+The updated product backlog provides a final overview of the Medication Reminder & Tracker project's development progress. The completion of all 28 active user stories across five closed sprints represents the conclusion of the planned Agile development work. The final backlog records the status of the completed features, including medication search, medication photo uploads, daily summaries, CSV report exports, and caregiver support features.
+The updated product backlog provides a final overview of the Medication Reminder & Tracker project's development progress. The completion of all 28 active user stories across five closed sprints represents the conclusion of the planned Agile development work. The final backlog records the status of the completed features, including medication search, medication photo uploads, daily summaries, CSV report exports, and caregiver support features.

@@ -1,162 +1,143 @@
-# sprint journal
-# Sprint 5 Backlog – Additional Features & Caregiver Enhancements
+# Sprint Journal – Medication Reminder & Tracker
+
+## Sprint 5: Additional Features & Caregiver Enhancements
+
+**Sprint Status:** Closed / Completed  
+**Sprint Duration:** 2 weeks  
+**Sprint Goal:** Complete the remaining medication management, daily summary, reporting, and caregiver features to improve the usability of the Medication Reminder & Tracker application.
+
+---
 
 ## 1. Sprint Overview
 
-* **Project:** Medication Reminder & Tracker
-* **Sprint:** Sprint 5
-* **Duration:** 2 weeks
-* **Sprint Status:** In Progress
-* **Sprint Goal:** Complete and review the remaining medication management, reporting, and caregiver features.
-* **Total User Stories:** 7
-* **Total Story Points:** 25
+Sprint 5 focused on completing the final seven user stories in the Medication Reminder & Tracker project. The main areas of development included medication search, medication photo uploads, daily medication summaries, medication notes, CSV report exports, caregiver weekly reports, and caregiver management of multiple patients.
 
-## 2. Sprint Backlog
+By the end of the sprint, all seven planned user stories had been completed, and Sprint 5 was officially closed.
 
-### US-22: Search Medication
+| Metric | Result |
+|---|---:|
+| Stories Planned | 7 |
+| Stories Completed | 7 |
+| Total Planned Story Points | 25 |
+| Completed Story Points | 25 |
+| Sprint Velocity | 25 |
+| Completion Rate | 100% |
 
-* **Priority:** Low
-* **Story Points:** 3
-* **Status:** Review
+## 2. Sprint Planning
 
-**User Story:** As a user, I want to search for medications by name so that I can quickly find a specific medication.
+During Sprint Planning, the team reviewed the remaining product backlog and selected seven user stories for Sprint 5. The team agreed to focus on improving medication management, reporting capabilities, and caregiver functionality.
 
-**Acceptance Criteria:**
+The sprint goal was to complete the remaining features, verify their functionality against the acceptance criteria, and close the sprint with all planned stories completed.
 
-* The user can search for a medication by name.
-* The system displays matching medications.
-* A message appears when no matching medications are found.
+The following user stories were selected:
 
-### US-23: Upload Medication Photo
+- **US-22: Search Medication** – 3 story points
+- **US-23: Upload Medication Photo** – 3 story points
+- **US-24: View Daily Medication Summary** – 3 story points
+- **US-25: Add Medication Notes** – 2 story points
+- **US-26: Export Reports as CSV** – 3 story points
+- **US-27: Caregiver Views Weekly Reports** – 3 story points
+- **US-28: Caregiver Manages Multiple Patients** – 8 story points
 
-* **Priority:** Low
-* **Story Points:** 3
-* **Status:** Review
+The total sprint commitment was seven user stories, representing 25 story points.
 
-**User Story:** As a user, I want to upload a photo for a medication so that I can identify it more easily.
+## 3. Key Development Activities
 
-**Acceptance Criteria:**
+### 3.1 Medication Search
 
-* The user can select or capture a medication photo.
-* The photo is associated with the correct medication.
-* The uploaded photo appears in the medication details.
-* The system handles upload errors appropriately.
+The medication search functionality was completed to help users find medications quickly and conveniently. Users can search for medications by name, view matching results, and receive an appropriate message when no matching medications are found.
 
-### US-24: View Daily Medication Summary
+### 3.2 Medication Photo Upload
 
-* **Priority:** Low
-* **Story Points:** 3
-* **Status:** Review
+The medication photo feature was completed to help users identify their medications more easily. Users can select or capture a photo and associate it with the relevant medication. The photo is displayed alongside the medication details, and appropriate error handling is provided for unsuccessful uploads.
 
-**User Story:** As a user, I want to view a daily medication summary so that I can understand my medication progress for the day.
+### 3.3 Daily Medication Summary
 
-**Acceptance Criteria:**
+The daily medication summary functionality was completed to help users monitor their medication progress. The system displays medications scheduled for a selected day and provides information about taken, missed, and remaining doses. The summary reflects the recorded dose-status updates.
 
-* The system displays medications scheduled for the selected day.
-* The summary shows taken, missed, and remaining doses.
-* The summary reflects recorded dose-status updates.
+### 3.4 Medication Notes
 
-### US-25: Add Medication Notes
+The medication notes feature was completed to allow users to record additional instructions or information about their medications. Users can add, edit, and delete notes, which remain associated with the relevant medication.
 
-* **Priority:** Low
-* **Story Points:** 2
-* **Status:** Review
+### 3.5 CSV Report Export
 
-**User Story:** As a user, I want to add notes to a medication so that I can remember additional instructions or information.
+The CSV report export functionality was completed to allow users to review medication and adherence information in spreadsheet applications. Users can request an export containing supported data and save or download the generated file. The system also provides appropriate feedback when an export fails.
 
-**Acceptance Criteria:**
+### 3.6 Caregiver Weekly Reports
 
-* The user can add notes to a medication.
-* The user can edit or delete existing notes.
-* Saved notes remain associated with the correct medication.
+The caregiver weekly report feature was completed to help caregivers monitor the medication adherence of patients they are authorized to support. Caregivers can select an authorized patient and view weekly medication information, including relevant taken and missed dose details.
 
-### US-26: Export Reports as CSV
+### 3.7 Caregiver Management of Multiple Patients
 
-* **Priority:** Low
-* **Story Points:** 3
-* **Status:** Review
+The multiple-patient caregiver functionality was completed to allow caregivers to manage several authorized patients through one account. Caregivers can view their authorized patient list, select a patient, and review that patient's medication schedule and adherence information. Patient information is kept separate, and unauthorized access is restricted.
 
-**User Story:** As a user, I want to export medication and adherence information as a CSV file so that I can review the data in a spreadsheet.
+## 4. Sprint Ceremonies
 
-**Acceptance Criteria:**
+### Sprint Planning
 
-* The user can request a CSV export.
-* The exported file contains the supported medication and adherence data.
-* The file can be saved or downloaded.
-* The system displays an appropriate message if the export fails.
+**Date:** Not recorded.
 
-### US-27: Caregiver Views Weekly Reports
+The team reviewed the remaining product backlog, selected seven user stories, confirmed the sprint goal, and agreed on the planned workload of 25 story points.
 
-* **Priority:** Low
-* **Story Points:** 3
-* **Status:** In Progress
+### Daily Stand-ups
 
-**User Story:** As a caregiver, I want to view a patient's weekly medication report so that I can monitor their medication adherence.
+Specific stand-up dates and individual meeting notes were not recorded in the available information. During the sprint, progress was tracked against the selected user stories and their acceptance criteria as work moved through implementation, review, and completion.
 
-**Acceptance Criteria:**
+### Sprint Review
 
-* The caregiver can select an authorized patient.
-* The system displays the patient's weekly medication and adherence information.
-* The report shows relevant taken and missed dose information.
-* Only authorized caregivers can access the report.
+**Date:** Not recorded.
 
-### US-28: Caregiver Manages Multiple Patients
+During the sprint review, the completed features were assessed against the planned user stories and acceptance criteria. All seven user stories were reported as completed.
 
-* **Priority:** Low
-* **Story Points:** 8
-* **Status:** In Progress
+### Sprint Retrospective
 
-**User Story:** As a caregiver, I want to manage multiple patients from one account so that I can monitor their medication schedules and adherence more conveniently.
+**Date:** Not recorded.
 
-**Acceptance Criteria:**
+The sprint was closed after all planned user stories were completed. The team can use the retrospective to discuss what went well, the challenges encountered, and improvements for future development work.
 
-* The caregiver can view their authorized patient list.
-* The caregiver can select a patient.
-* The system displays the selected patient's medication schedule and adherence information.
-* Patient information remains separated.
-* Unauthorized patient information cannot be accessed.
+## 5. Sprint Backlog and Final Status
 
-## 3. Sprint Status Summary
+At the end of Sprint 5, all seven user stories were marked as Done.
 
-| User Story                      | Story Points | Status                 |
-| ------------------------------- | -----------: | ---------------------- |
-| US-22: Search Medication        |            3 | Review                 |
-| US-23: Upload Medication Photo  |            3 | Review                 |
-| US-24: Daily Medication Summary |            3 | Review                 |
-| US-25: Add Medication Notes     |            2 | Review                 |
-| US-26: Export Reports as CSV    |            3 | Review                 |
-| US-27: Caregiver Weekly Reports |            3 | In Progress            |
-| US-28: Manage Multiple Patients |            8 | In Progress            |
-| **Total**                       |       **25** | **Sprint In Progress** |
+| User Story | Description | Story Points | Final Status |
+|---|---|---:|---|
+| US-22 | Search Medication | 3 | Done |
+| US-23 | Upload Medication Photo | 3 | Done |
+| US-24 | View Daily Medication Summary | 3 | Done |
+| US-25 | Add Medication Notes | 2 | Done |
+| US-26 | Export Reports as CSV | 3 | Done |
+| US-27 | Caregiver Views Weekly Reports | 3 | Done |
+| US-28 | Caregiver Manages Multiple Patients | 8 | Done |
+| **Total** | **7 user stories** | **25** | **All completed** |
 
-### Status Totals
+## 6. Sprint Deliverable
 
-* **Review:** 5 user stories — 14 story points
-* **In Progress:** 2 user stories — 11 story points
+By the end of Sprint 5, the team had completed the planned features for medication search, photo uploads, daily medication summaries, medication notes, CSV report exports, caregiver weekly reports, and caregiver management of multiple patients.
 
-## 4. GitHub Configuration
+These features expanded the application's medication management, reporting, and caregiver capabilities. All seven user stories were marked as complete, and the sprint was closed.
 
-* **Milestone:** Sprint 5 – Additional Features & Caregiver Enhancements
-* **Iteration:** Sprint 5
-* **Project Board:** Medication Reminder & Tracker – Agile Project
+## 7. Sprint Review and Completion
 
-Use the following workflow:
+Sprint 5 was successfully completed according to the reported final backlog status. All seven planned user stories were completed, with 25 story points delivered out of the 25 planned.
 
-Backlog → Todo → In Progress → Review → Done
+The sprint achieved a completion rate of 100%. User stories US-22 through US-28 were marked as Done, and the sprint status was updated to Closed.
 
-Keep US-22–US-26 in Review and US-27–US-28 In Progress. Move a story to Done only after it passes the team's review and testing requirements.
+## 8. Sprint Reflection
 
-## 5. Definition of Done
+### What Went Well
 
-A user story is considered complete when:
+All seven planned user stories were completed during Sprint 5. The sprint delivered improvements across medication usability, reporting, and caregiver functionality. The team completed the planned 25 story points and updated the backlog to reflect the final status.
 
-* All acceptance criteria are met.
-* Implementation is integrated into the application.
-* Relevant tests pass.
-* Code review is completed.
-* No critical defects remain.
-* Necessary documentation is updated.
+### Challenges
 
-## 6. Sprint Completion
+Specific technical challenges and blockers encountered during Sprint 5 were not recorded in the available information. Any challenges identified by the team should be added to the journal based on the actual development experience.
 
-Sprint 5 will be ready to close when the team has completed the remaining implementation and review work, verified the acceptance criteria, and demonstrated the completed features. Any unfinished stories should remain open for future planning.
+### Lessons Learned and Improvements
+
+The sprint highlights the importance of maintaining clear acceptance criteria and keeping GitHub issue statuses consistent with project documentation. Caregiver functionality also requires careful attention to authorization and separation of patient information. Recording sprint ceremony dates, blockers, testing results, and retrospective actions would improve future sprint documentation.
+
+## 9. Sprint 5 Conclusion
+
+Sprint 5 of the Medication Reminder & Tracker project was completed and closed with all seven user stories, from US-22 to US-28, marked as Done. The team completed 25 story points out of the planned 25, achieving a 100% completion rate.
+
+The sprint delivered the planned medication search, photo upload, daily summary, medication notes, CSV export, caregiver weekly report, and multiple-patient management features. With Sprint 5 closed, the planned work across the five sprints has been completed according to the reported sprint statuses.
