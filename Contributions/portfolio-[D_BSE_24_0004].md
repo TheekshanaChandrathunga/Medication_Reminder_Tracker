@@ -1,6 +1,6 @@
 # My Contribution
 
-**Name:** Theekshana Umayangi  
+**Name:** Theekshana Umayangi Chandrathunga  
 **Index Number:** D/BSE/24/0004
 
 ## My Role
