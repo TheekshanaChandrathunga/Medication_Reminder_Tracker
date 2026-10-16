@@ -64,15 +64,8 @@ My contribution provided the complete Figma UI design for both patients and care
 
 ## Contribution Evidence
 
-The following commits show my work on the project:
+My commits can be viewed together through my GitHub commit history:
 
-| Commit | Contribution | Evidence |
-|---|---|---|
-| Add README for Medication Reminder & Tracker App UI | Added documentation for the application UI and design. | [View commit](https://github.com/TheekshanaChandrathunga/Medication_Reminder_Tracker/commit/93e521598e3f4de68dcdc0b7ee009de7a77307e9) |
-| Initial commit | Contributed to the initial project setup and files. | [View commit](https://github.com/TheekshanaChandrathunga/Medication_Reminder_Tracker/commit/b3e6179992d8ce1d7fdb889bd5e32894e0893bc8) |
-| Update gitignore | Updated the project Git ignore configuration. | [View commit](https://github.com/TheekshanaChandrathunga/Medication_Reminder_Tracker/commit/e285fe7490ce40afdeba51da0fd5ca2da7b40f99) |
-| Add medication detail page | Added and developed the medication detail page. | [View commit](https://github.com/TheekshanaChandrathunga/Medication_Reminder_Tracker/commit/d41a696a94603b64b8350f4d05ba74abf6b503df) |
-| Update login, profile | Updated the login and profile pages. | [View commit](https://github.com/TheekshanaChandrathunga/Medication_Reminder_Tracker/commit/030b8f1a5cc153a3458d101c1834a91f4dbf023a) |
-| Add report page changes | Added changes to the reports page. | [View commit](https://github.com/TheekshanaChandrathunga/Medication_Reminder_Tracker/commit/23fa8fb52093b52b69b32f2b7788b25b916829f9) |
-| Add caregiver home page and profile updates | Added the caregiver home page and updated the profile screens. | [View commit](https://github.com/TheekshanaChandrathunga/Medication_Reminder_Tracker/commit/87e0df5ca233702038f6f301bc26ef07efc6aaeb) |
-| Add Splash, Register, Login, Home, AddMedication, Meds, and Profile pages | Added and implemented the main patient frontend pages. | [View commit](https://github.com/TheekshanaChandrathunga/Medication_Reminder_Tracker/commit/065d18ae8db66d698af9a26ddfa461d87865420b) |
+| Evidence | Link |
+|---|---|
+| All commits made under my GitHub author account | [View all my commits](https://github.com/TheekshanaChandrathunga/Medication_Reminder_Tracker/commits/main/?author=chithushik) |
