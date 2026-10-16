@@ -1,69 +1,113 @@
-# My Contribution
+# Medication Reminder & Tracker - Individual Contribution
 
-**Name:** Theekshana Umayangi Chandrathunga  
-**Index Number:** D/BSE/24/0004
+## 1. Student Information
 
-## My Role
+- **Name:** Theekshana Umayangi Chandrathunga
+- **Student ID:** D/BSE/24/0004
+- **Degree Programme:** BSc (Hons) in Software Engineering
+- **University:** General Sir John Kotelawala Defence University (KDU)
+- **Project:** Medication Reminder & Tracker
+- **Repository:** [Medication Reminder & Tracker](https://github.com/K-E-Attygalle/Medication_Reminder_Tracker)
+- **Primary Role:** Backend Developer and QA Engineer
 
-I worked as a **Backend Developer and QA Engineer**. I focused on Firebase integration, medication and adherence features, caregiver functionality, notifications, reports, and application testing.
+## 2. Project Overview
 
-## What I Did
+The Medication Reminder & Tracker is a mobile application designed to help patients manage their medication schedules and allow caregivers to monitor adherence. It provides features for scheduling medications, tracking taken and missed doses, generating adherence reports, and sending timely notifications. The system utilizes Firebase for secure data storage, authentication, and role-based access control to ensure patient privacy and data integrity.
 
+## 3. My Role and Responsibilities
+
+My main responsibilities focused on the backend infrastructure, database management, notification services, reporting modules, and comprehensive system testing.
+
+My main responsibilities included:
+- Implementing Firebase Authentication and Cloud Firestore for data persistence and user management.
+- Developing the logic for medication scheduling, adherence tracking, and caregiver-patient relationships.
+- Designing and implementing Firestore Security Rules to protect sensitive medical data.
+- Creating a notification system for medication reminders and missed doses.
+- Developing the reporting engine to generate PDF summaries of patient adherence.
+- Managing Quality Assurance (QA) by creating test documentation and fixing critical bugs.
+
+## 4. My Contributions
+
+### 4.1 Firebase Integration and Security
 - Connected the Flutter application to Firebase Authentication and Cloud Firestore.
-- Implemented database operations for users, roles, medications, medication stock, adherence logs, reports, and caregiver-patient relationships.
-- Created Firestore security rules to protect patient data and limit caregivers to their assigned patients.
-- Implemented caregiver features for adding multiple patients without requiring patient IDs.
-- Added patient editing, patient removal, medication-plan management, and patient selection for caregivers.
-- Implemented **Taken** and **Missed** medication actions.
-- Added adherence history records and medication stock updates when doses are taken.
-- Added local medication reminders and missed-dose reminders using Flutter local notifications.
-- Implemented patient-specific weekly, monthly, and custom reports.
-- Included caregiver details, patient details, medication plans, and adherence data in PDF reports.
-- Connected caregiver History and Reports pages to the selected patient’s medication activity.
-- Created the complete application test document covering functional, integration, security, usability, and regression testing.
-- Used Flutter analysis and Firebase rules deployment to validate the application.
+- Implemented role-based access control (RBAC) via Firestore security rules to ensure patients can only access their data and caregivers can only view data for patients assigned to them.
+- Used atomic operations and `getAfter()` rules for secure patient creation by caregivers.
 
-## QA and Bug Fixing
+### 4.2 Medication and Adherence Logic
+- Implemented database operations for managing medications, stocks, and adherence logs.
+- Developed the "Taken" and "Missed" dose logic, ensuring that stock levels are automatically updated when a dose is recorded.
+- Created history records to track long-term adherence trends.
 
-I tested and fixed issues involving:
+### 4.3 Caregiver Management Features
+- Developed functionality for caregivers to add, edit, and remove multiple patients.
+- Implemented patient selection logic so caregivers can switch between different patient dashboards to manage their medication plans.
 
-- Caregiver accounts opening the Patient interface.
-- Incorrect navigation between caregiver and patient pages.
-- Firestore permission errors when caregivers added medications or recorded adherence.
-- Patient creation and editing errors.
-- Patient-specific reports displaying incorrect data.
-- Taken/Missed records not appearing in the correct History page.
-- Missing back navigation and unclear caregiver controls.
+### 4.4 Notifications and Reporting
+- Integrated `flutter_local_notifications` to provide offline reminders for scheduled medications.
+- Developed a reporting service that generates weekly, monthly, and custom PDF reports containing patient details, medication history, and adherence percentages.
 
-## Challenges
+### 4.5 Quality Assurance and Bug Fixing
+- Created a comprehensive test document covering functional, integration, security, usability, and regression testing.
+- Fixed critical navigation issues between caregiver and patient interfaces and resolved Firestore permission errors.
 
-### Firebase integration
+## 5. Challenges and How I Addressed Them
 
-Connecting Authentication, Firestore, reports, and security rules was challenging. At first, valid caregiver actions were rejected with `permission-denied` errors because the rules only supported patients managing their own data. I solved this by adding caregiver-role checks, caregiver-patient relationship validation, secure update rules, and atomic patient creation using `getAfter()`.
+### Firebase Security Rules
+**Challenge:** Valid caregiver actions (like adding a patient's medication) were initially rejected with `permission-denied` errors because rules were too restrictive.
+**How I addressed it:** I restructured the rules to validate caregiver-patient relationships through a specialized mapping collection and verified roles during every write operation.
 
-### Connecting devices and notifications
+### Device Synchronization and Notifications
+**Challenge:** Ensuring notifications worked consistently across different devices and handled role switching correctly.
+**How I addressed it:** I configured platform-specific notification channels for Android and handled permission requests dynamically. I also ensured that the background notification logic correctly fetched the current user's role from Firestore.
 
-The application needed to share the same Firebase data between Patient and Caregiver devices while showing the correct role-based interface. I configured Firebase for the target platforms, added Android notification permissions and channels, handled web notification limitations, and tested medication reminders on different devices.
+### Integration and Merge Issues
+**Challenge:** Frequent merge conflicts in `main.dart` and backend service files during collaborative development.
+**How I addressed it:** I took the lead in resolving merge conflicts, ensuring that both UI changes and backend logic remained intact, followed by regression testing of the affected modules.
 
-### Integration and merge issues
+## 6. Key Learning Outcomes
 
-Backend and frontend changes sometimes caused merge conflicts and navigation problems. I resolved these issues while preserving the UI and Firebase functionality, then retested the affected workflows.
+Through these activities, I gained experience in:
+- Implementing complex backend logic with Firebase and Flutter.
+- Writing and deploying secure Firestore Security Rules.
+- Developing local notification systems for mobile applications.
+- Generating dynamic PDF reports from cloud data.
+- Performing thorough QA testing and documenting bugs systematically.
+- Handling real-time database synchronization across multiple user roles.
+- Collaboration and conflict resolution in a Git-based team environment.
 
-## Related GitHub Work
+## 7. Project Outcome
 
-My work is reflected in commits including:
+My contribution delivered a robust, secure, and functional backend for the Medication Reminder & Tracker. By implementing the core adherence logic, notification system, and caregiver management features, I ensured that the app provides a reliable experience for both patients and their caregivers. The project successfully provides automated reminders and detailed reports, helping users stay on track with their health goals.
 
-- **Medication Backend**
-- **Debug Backend**
-- **Medication missed complete**
-- **notification update**
-- **backend for reports page**
+## 8. Evidence of Contributions
+
+### 8.1 Commits and Development Work
+
+| Evidence ID | Description |
+|---|---|
+| E1 | Implement Firebase Auth, Firestore backend, and Adherence tracking |
+| E2 | Medication Backend and Adherence logic implementation |
+| E3 | notification update and local reminders setup |
+| E4 | backend for reports page and PDF service |
+| E5 | Generate the report with full details (PDF implementation) |
+| E6 | Caregiver Side Completed (Patient management logic) |
+| E7 | Test Documentation (Comprehensive QA plan) |
+| E8 | Backend Update and bug fixes for Firestore rules |
+
+### 8.2 Git Commit History (Partial List)
+- **develop in mobile device**
+- **rename the contribution file**
+- **Delete CLAUDE.md, AGENTS.md, and README.md**
+- **My Contribution as a Backend Developer**
+- **fix the error in the pull code**
 - **Add medication reports service**
-- **Generate the report with full details**
-- **Backend Update**
-- **Caregiver Side Completed**
-- **Test Documentation**
+- **logout confirmation and back to login**
+- **Medication missed complete**
+- **Resolve main.dart merge conflict**
+- **Debug Backend**
+- **Update Architecture Diagram.md**
+- **Initial commit**
 
-## Outcome
+## 9. Reflection
 
-My contribution helped deliver a secure Firebase-backed medication tracker with Patient and Caregiver roles, medication reminders, Taken/Missed tracking, caregiver patient management, synchronized history, and patient-specific reports.
+Participating in the Medication Reminder & Tracker project allowed me to apply my skills in backend architecture and quality assurance in a practical, impactful way. Dealing with sensitive health data taught me the critical importance of security and data privacy. I learned how to iterate quickly based on testing results and how to manage the complexities of a multi-role system. This experience has significantly improved my technical proficiency with Flutter and Firebase, as well as my ability to contribute effectively to a professional software development team.
