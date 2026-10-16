@@ -83,30 +83,9 @@ My contribution delivered a robust, secure, and functional backend for the Medic
 
 This section provides evidence of my individual contributions to the Medication Reminder & Tracker project. The evidence includes backend implementation, notification services, reporting modules, and QA documentation.
 
-### 8.1 Backend and Feature Implementation Evidence
-
-| Evidence ID | Description | Evidence Link |
-|---|---|---|
-| E1 | Initial Firebase Auth & Firestore implementation | [View Commit](https://github.com/K-E-Attygalle/Medication_Reminder_Tracker/commit/4820cf9) |
-| E2 | Adherence tracking logic (Taken/Missed) | [View Commit](https://github.com/K-E-Attygalle/Medication_Reminder_Tracker/commit/2cb3d66) |
-| E3 | Caregiver side patient management | [View Commit](https://github.com/K-E-Attygalle/Medication_Reminder_Tracker/commit/7136918) |
-| E4 | Medication reports service implementation | [View Commit](https://github.com/K-E-Attygalle/Medication_Reminder_Tracker/commit/fdb9649) |
-| E5 | PDF Report generation logic | [View Commit](https://github.com/K-E-Attygalle/Medication_Reminder_Tracker/commit/7c0affd) |
-| E6 | Notification system update | [View Commit](https://github.com/K-E-Attygalle/Medication_Reminder_Tracker/commit/7652a40) |
-| E7 | Backend debugging and security rule fixes | [View Commit](https://github.com/K-E-Attygalle/Medication_Reminder_Tracker/commit/f585388) |
-| E8 | Mobile device development setup | [View Commit](https://github.com/K-E-Attygalle/Medication_Reminder_Tracker/commit/21648e9) |
-
-### 8.2 Quality Assurance Evidence
-
-| Evidence ID | Description | Evidence Link |
-|---|---|---|
-| E9 | Comprehensive Test Documentation | [View Commit](https://github.com/K-E-Attygalle/Medication_Reminder_Tracker/commit/a429ce7) |
-| E10 | Bug fixes and backend updates | [View Commit](https://github.com/K-E-Attygalle/Medication_Reminder_Tracker/commit/459ce53) |
-
-### 8.3 Project Documentation and Git History
-
 - **Project Repository:** [View GitHub Repository](https://github.com/users/TheekshanaChandrathunga/projects/1)
 - **Git Commit History:** [View All My Commits](https://github.com/TheekshanaChandrathunga/Medication_Reminder_Tracker/commits/main/?author=TheekshanaChandrathunga)
+                                              (https://github.com/TheekshanaChandrathunga/Medication_Reminder_Tracker/commits/backend?author=TheekshanaChandrathunga)
 
 ## 9. Reflection
 
