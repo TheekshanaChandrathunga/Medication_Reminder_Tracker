@@ -81,32 +81,32 @@ My contribution delivered a robust, secure, and functional backend for the Medic
 
 ## 8. Evidence of Contributions
 
-### 8.1 Commits and Development Work
+This section provides evidence of my individual contributions to the Medication Reminder & Tracker project. The evidence includes backend implementation, notification services, reporting modules, and QA documentation.
 
-| Evidence ID | Description |
-|---|---|
-| E1 | Implement Firebase Auth, Firestore backend, and Adherence tracking |
-| E2 | Medication Backend and Adherence logic implementation |
-| E3 | notification update and local reminders setup |
-| E4 | backend for reports page and PDF service |
-| E5 | Generate the report with full details (PDF implementation) |
-| E6 | Caregiver Side Completed (Patient management logic) |
-| E7 | Test Documentation (Comprehensive QA plan) |
-| E8 | Backend Update and bug fixes for Firestore rules |
+### 8.1 Backend and Feature Implementation Evidence
 
-### 8.2 Git Commit History (Partial List)
-- **develop in mobile device**
-- **rename the contribution file**
-- **Delete CLAUDE.md, AGENTS.md, and README.md**
-- **My Contribution as a Backend Developer**
-- **fix the error in the pull code**
-- **Add medication reports service**
-- **logout confirmation and back to login**
-- **Medication missed complete**
-- **Resolve main.dart merge conflict**
-- **Debug Backend**
-- **Update Architecture Diagram.md**
-- **Initial commit**
+| Evidence ID | Description | Evidence Link |
+|---|---|---|
+| E1 | Initial Firebase Auth & Firestore implementation | [View Commit](https://github.com/K-E-Attygalle/Medication_Reminder_Tracker/commit/4820cf9) |
+| E2 | Adherence tracking logic (Taken/Missed) | [View Commit](https://github.com/K-E-Attygalle/Medication_Reminder_Tracker/commit/2cb3d66) |
+| E3 | Caregiver side patient management | [View Commit](https://github.com/K-E-Attygalle/Medication_Reminder_Tracker/commit/7136918) |
+| E4 | Medication reports service implementation | [View Commit](https://github.com/K-E-Attygalle/Medication_Reminder_Tracker/commit/fdb9649) |
+| E5 | PDF Report generation logic | [View Commit](https://github.com/K-E-Attygalle/Medication_Reminder_Tracker/commit/7c0affd) |
+| E6 | Notification system update | [View Commit](https://github.com/K-E-Attygalle/Medication_Reminder_Tracker/commit/7652a40) |
+| E7 | Backend debugging and security rule fixes | [View Commit](https://github.com/K-E-Attygalle/Medication_Reminder_Tracker/commit/f585388) |
+| E8 | Mobile device development setup | [View Commit](https://github.com/K-E-Attygalle/Medication_Reminder_Tracker/commit/21648e9) |
+
+### 8.2 Quality Assurance Evidence
+
+| Evidence ID | Description | Evidence Link |
+|---|---|---|
+| E9 | Comprehensive Test Documentation | [View Commit](https://github.com/K-E-Attygalle/Medication_Reminder_Tracker/commit/a429ce7) |
+| E10 | Bug fixes and backend updates | [View Commit](https://github.com/K-E-Attygalle/Medication_Reminder_Tracker/commit/459ce53) |
+
+### 8.3 Project Documentation and Git History
+
+- **Project Repository:** [View GitHub Repository](https://github.com/K-E-Attygalle/Medication_Reminder_Tracker)
+- **Git Commit History:** [View All My Commits](https://github.com/K-E-Attygalle/Medication_Reminder_Tracker/commits/main/?author=TheekshanaChandrathunga)
 
 ## 9. Reflection
 
