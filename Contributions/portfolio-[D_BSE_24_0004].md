@@ -7,7 +7,7 @@
 - **Degree Programme:** BSc (Hons) in Software Engineering
 - **University:** General Sir John Kotelawala Defence University (KDU)
 - **Project:** Medication Reminder & Tracker
-- **Repository:** [Medication Reminder & Tracker](https://github.com/K-E-Attygalle/Medication_Reminder_Tracker)
+- **Repository:** [Medication Reminder & Tracker](https://github.com/TheekshanaChandrathunga/Medication_Reminder_Tracker)
 - **Primary Role:** Backend Developer and QA Engineer
 
 ## 2. Project Overview
@@ -105,8 +105,8 @@ This section provides evidence of my individual contributions to the Medication 
 
 ### 8.3 Project Documentation and Git History
 
-- **Project Repository:** [View GitHub Repository](https://github.com/K-E-Attygalle/Medication_Reminder_Tracker)
-- **Git Commit History:** [View All My Commits](https://github.com/K-E-Attygalle/Medication_Reminder_Tracker/commits/main/?author=TheekshanaChandrathunga)
+- **Project Repository:** [View GitHub Repository](https://github.com/users/TheekshanaChandrathunga/projects/1)
+- **Git Commit History:** [View All My Commits](https://github.com/TheekshanaChandrathunga/Medication_Reminder_Tracker/commits/main/?author=TheekshanaChandrathunga)
 
 ## 9. Reflection
 
