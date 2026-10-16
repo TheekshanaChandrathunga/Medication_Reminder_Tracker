@@ -138,18 +138,7 @@ The project concluded with five closed sprints and 28 active user stories marked
 
 The following evidence can be used to demonstrate my individual contributions. The relevant repository links and records should be added where available.
 
-| Evidence ID | Description | Evidence |
-|---|---|---|
-| E1 | Product backlog | Product backlog document |
-| E2 | Sprint journals | Sprint journal documents for the five sprints |
-| E3 | Sprint planning and task allocation | Sprint backlog or project board |
-| E4 | User story status tracking | GitHub project board or backlog records |
-| E5 | Pull request reviews | Relevant GitHub pull requests |
-| E6 | Code integration and merging | GitHub merge history |
-| E7 | Merge conflict resolution | Relevant commits or pull request records |
-| E8 | Project repository activity | GitHub repository and commit history |
-
-*Note: Add actual repository URLs, screenshots, pull request links, or commit references to substantiate each item. Do not include evidence that is unavailable.*
+Evidence  link - https://github.com/TheekshanaChandrathunga/Medication_Reminder_Tracker/commits/main/?author=Kawmini0212
 
 ## 9. Reflection
 
